@@ -3,7 +3,11 @@ from matplotlib import pyplot as plt
 from funcitons import get_augmented_images_cropped, crop_image
 
 # Load the video
+<<<<<<< Updated upstream
 cap = cv2.VideoCapture("video.mp4")
+=======
+cap = cv2.VideoCapture("TestCameravsPhone.mp4")
+>>>>>>> Stashed changes
 
 # Get the first frame
 ret, frame = cap.read()
