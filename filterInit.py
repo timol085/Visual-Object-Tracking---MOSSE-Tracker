@@ -15,7 +15,7 @@ def filterInit(img):
 
     G = np.fft.fft2(g)
 
-    # Calculate filter
+    # Calculate MOSSE filter
     A = 0
     B = 0
     for i in range(0, len(img)):
@@ -25,15 +25,22 @@ def filterInit(img):
 
     H = A/B
 
-    # # Test
-    # Img = np.fft.fft2(cv2.cvtColor(
-    #     cv2.imread('TSBB34_2.jpg'), cv2.COLOR_BGR2GRAY))
-    # G = H * Img
-    # G = np.fft.ifft2(G)
-    # plt.imshow(G.real)
-    # plt.show()
+    # Test original image
+    img_org = np.fft.fft2(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY))
+    result_img_org = img_org * H
+    result_img_org = np.fft.ifft2(result_img_org).real
+    plt.imshow(result_img_org)
+    plt.show()
+
+    # Test target moved
+    img_test = np.fft.fft2(cv2.cvtColor(cv2.imread('TSBB34_2.jpg'), cv2.COLOR_BGR2GRAY))
+    result_img_test = img_test * H
+    result_img_test = np.fft.ifft2(result_img_test).real
+    plt.imshow(result_img_test)
+    plt.show()
 
 
 if __name__ == "__main__":
-    img = cv2.imread('TSBB34_1.jpg')
-    filterInit(img)
+    images = [cv2.imread('TSBB34_1.jpg'),cv2.imread('TSBB34_1_mod2.jpg'),cv2.imread('TSBB34_1_mod3.jpg'),cv2.imread('TSBB34_1_mod4.jpg'),cv2.imread('TSBB34_1_mod5.jpg'),cv2.imread('TSBB34_1_mod6.jpg'),cv2.imread('TSBB34_1_mod7.jpg')]
+    #img = cv2.imread('TSBB34_1.jpg')
+    filterInit(images)
