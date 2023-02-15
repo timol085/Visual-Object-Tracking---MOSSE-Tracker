@@ -32,15 +32,4 @@ def filterInit(img):
     plt.imshow(result_img_org)
     plt.show()
 
-    # Test target moved
-    img_test = np.fft.fft2(cv2.cvtColor(cv2.imread('TSBB34_2.jpg'), cv2.COLOR_BGR2GRAY))
-    result_img_test = img_test * H
-    result_img_test = np.fft.ifft2(result_img_test).real
-    plt.imshow(result_img_test)
-    plt.show()
-
-
-if __name__ == "__main__":
-    images = [cv2.imread('TSBB34_1.jpg'),cv2.imread('TSBB34_1_mod2.jpg'),cv2.imread('TSBB34_1_mod3.jpg'),cv2.imread('TSBB34_1_mod4.jpg'),cv2.imread('TSBB34_1_mod5.jpg'),cv2.imread('TSBB34_1_mod6.jpg'),cv2.imread('TSBB34_1_mod7.jpg')]
-    #img = cv2.imread('TSBB34_1.jpg')
-    filterInit(images)
+    return H, A, B
