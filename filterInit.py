@@ -5,32 +5,31 @@ import numpy as np
 
 
 def filterInit(img):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    height, width = imgGray.shape
+    height, width, _ = img[0].shape
     sigma = 2
 
     # Create gaussian filter
     g_x = cv2.getGaussianKernel(height, sigma)
     g_y = cv2.getGaussianKernel(width, sigma)
     g = np.outer(g_x, g_y)
-    plt.imshow(g)
-    plt.show()
 
-    # Calculate filter
     G = np.fft.fft2(g)
-    F = np.fft.fft2(imgGray)
-    H = (G * np.conjugate(Img))/(F * np.conjugate(F))
 
-    # Test
-    Img = np.fft.fft2(cv2.cvtColor(
-        cv2.imread('TSBB34_2.jpg'), cv2.COLOR_BGR2GRAY))
-    G = H * Img
-    G = np.fft.ifft2(G)
-    plt.imshow(G.real)
+    # Calculate MOSSE filter
+    A = 0
+    B = 0
+    for i in range(0, len(img)):
+        F_i = np.fft.fft2(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY))
+        A = A + G * np.conjugate(F_i)
+        B = B + F_i * np.conjugate(F_i)
+
+    H = A/B
+
+    # Test original image
+    img_org = np.fft.fft2(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY))
+    result_img_org = img_org * H
+    result_img_org = np.fft.ifft2(result_img_org).real
+    plt.imshow(result_img_org)
     plt.show()
 
-
-if __name__ == "__main__":
-    img = cv2.imread('TSBB34_1.jpg')
-    filterInit(img)
+    return H, A, B

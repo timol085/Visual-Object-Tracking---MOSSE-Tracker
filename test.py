@@ -1,6 +1,7 @@
 import cv2
 from matplotlib import pyplot as plt
 from funcitons import get_augmented_images_cropped, crop_image
+from filterInit import filterInit
 
 # Load the video
 
@@ -21,9 +22,10 @@ crop = crop_image(frame, x, y, w, h)
 cv2.imwrite("selected_region.jpg", crop)
 
 augmented_images_cropped = get_augmented_images_cropped(12, frame, crop_data)
+filterInit(augmented_images_cropped)
 
 for cropped_img in augmented_images_cropped:
-    plt.imshow(cropped_img,cmap=plt.cm.binary)
+    plt.imshow(cropped_img, cmap=plt.cm.binary)
     plt.show()
 
 # Clean up
