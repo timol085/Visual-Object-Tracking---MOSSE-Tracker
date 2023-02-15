@@ -78,5 +78,11 @@ def get_augmented_images_cropped(number_of_images, img,crop_data):
         
         
         
-    return augmented_images_cropped
+    return [img_cropped] + augmented_images_cropped
 
+
+
+def get_selected_region_from_frame(frame):
+    x, y, width, height = cv2.selectROI(frame)
+
+    return (x,y,width,height)

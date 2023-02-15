@@ -23,7 +23,7 @@ cv2.imwrite("selected_region.jpg", crop)
 augmented_images_cropped = get_augmented_images_cropped(12, frame, crop_data)
 
 for cropped_img in augmented_images_cropped:
-    plt.imshow(cropped_img, cmap=plt.get_cmap('gray'))
+    plt.imshow(cropped_img,cmap=plt.cm.binary)
     plt.show()
 
 # Clean up
