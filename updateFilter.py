@@ -1,6 +1,8 @@
 """Function to update the filter"""
 import numpy as np
 
+from get_peak_and_psr import get_peak_and_psr
+
 
 def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
     eta_Gi = eta*Gi
@@ -13,8 +15,15 @@ def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
     return Hi, Ai, Bi
 
 
-def updateWindow(x_org, y_org, w_org, h_org, F, peak):
-    dx = (w_org / 2) - peak[0]
-    dy = (h_org / 2) - peak[1]
+def updateWindow(x_org, y_org, w_org, h_org, img, thr=8):
 
-    return 0
+    peak, psr = get_peak_and_psr(img)
+
+    # If PSR < 7 then the object may be occluded
+    if psr > thr:
+        dx = peak[0] - (w_org / 2)
+        dy = peak[1] - (h_org / 2)
+    else:
+        return "Error, Occluded Object"
+
+    return x_org - dx, y_org - dy
