@@ -11,3 +11,10 @@ def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
     Hi = Ai / Bi
 
     return Hi, Ai, Bi
+
+
+def updateWindow(x_org, y_org, w_org, h_org, F, peak[]):
+    dx = (w_org / 2) - peak[0]
+    dy = (h_org / 2) - peak[1]
+
+    return 0
