@@ -1,9 +1,10 @@
 import numpy as np
 import cv2
 
-def tracking_succeeded(img,min_psr):
+def get_peak_and_psr(img):
     # Calculate peak value
     gmax = np.max(img)
+    print(img.shape)
 
     # Get indices of peak value
     peak_index = np.where(img == gmax)
@@ -17,22 +18,15 @@ def tracking_succeeded(img,min_psr):
     y_start = max(peak_y - window_size // 2, 0)
     y_end = min(peak_y + window_size // 2 + 1, img.shape[1])
 
-    # Calculate the sidelobe by excluding the 11x11 window around the peak
+    # Calculate sidelobe by excluding the 11x11 window around the peak
     sidelobe = img
     sidelobe[x_start:x_end, y_start:y_end] = 0
 
-    # Calculate the mean and standard deviation of the sidelobe
+    # Calculate mean and standard deviation of the sidelobe
     mean = np.mean(sidelobe)
     std = np.std(sidelobe)
 
-    # Calculate the PSR
+    # Calculate PSR
     psr = (gmax - mean) / std
 
-    if psr > min_psr:
-        return  True
-    return False
-
-if __name__ == "__main__":
-    img = cv2.imread('GaussianTest.jpg')
-    print(tracking_succeeded(img, 8))
-    
+    return [peak_x,peak_y],psr
