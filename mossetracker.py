@@ -9,6 +9,7 @@ import matplotlib.patches as patches
 from PIL import Image
 import numpy as np
 from matplotlib import cm
+from matplotlib import animation
 
 
 class MosseTracker:
@@ -44,6 +45,8 @@ class MosseTracker:
         success = True
         peak = []
         ox, oy, ow, oh = self.selected_region
+        frames = []
+        fig, ax = plt.subplots()
 
         while success:
             success, next_frame = cap.read()
@@ -55,6 +58,7 @@ class MosseTracker:
             # next_frame= np.array(grey_im)
 
             x, y, w, h = self.selected_region
+            
             # np.fft.fft2(cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
             F = np.fft.fft2(cv2.cvtColor(
                 crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
@@ -67,10 +71,10 @@ class MosseTracker:
             print("NEXT FRAME", (ux, uy, w, h))
 
             self.selected_region = (ux, uy, w, h)
-            fig, ax = plt.subplots()
+            
 
             # Display the image
-            ax.imshow(next_frame)
+            im = ax.imshow(next_frame,animated=True)
 
             # Create a Rectangle patch
             rect = patches.Rectangle(
@@ -80,11 +84,13 @@ class MosseTracker:
                 (ox, oy), ow, oh, linewidth=1, edgecolor='g', facecolor='none')
 
             # Add the patch to the Axes
-            ax.add_patch(rect)
-            ax.add_patch(rectOrg)
-
-            plt.show()
+            patch = ax.add_artist(rect)
+            #ax.add_patch(rectOrg)
+            frames.append([im,patch])
+            #plt.show()
             self.update_filter(F, output)
+        ani = animation.ArtistAnimation(fig,frames,interval=30,blit=True,repeat_delay=0)
+        plt.show()
 
     def apply_filter(self, frame):
         return self.filter[0] * frame

@@ -44,6 +44,10 @@ def transform_images(number_of_images, img):
 
 
 def crop_image(img, x, y, width, height):
+    x = max(x,0)
+    x = min(x,len(img[0]))
+    y = max(y,0)
+    y = min(y,len(img))
     return img[y:y+height, x:x+width]
 
 

@@ -2,6 +2,6 @@ from mossetracker import MosseTracker
 
 tracker = MosseTracker()
 
-tracker.initialize("bolt.mp4")
+tracker.initialize("surfer.mp4")
 
 tracker.track()
