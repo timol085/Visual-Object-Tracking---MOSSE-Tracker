@@ -9,6 +9,7 @@ import matplotlib.patches as patches
 from PIL import Image
 import numpy as np
 from matplotlib import cm
+from matplotlib import animation
 
 
 class MosseTracker:
@@ -44,6 +45,8 @@ class MosseTracker:
         success = True
         peak = []
         ox, oy, ow, oh = self.selected_region
+        frames = []
+        fig, ax = plt.subplots()
 
         while success:
             success, next_frame = cap.read()
@@ -67,24 +70,26 @@ class MosseTracker:
             print("NEXT FRAME", (ux, uy, w, h))
 
             self.selected_region = (ux, uy, w, h)
-            fig, ax = plt.subplots()
+            
 
             # Display the image
-            ax.imshow(next_frame)
+            im = ax.imshow(next_frame,animated=True)
 
             # Create a Rectangle patch
             rect = patches.Rectangle(
-                (ux, len(next_frame)-h-uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
+                (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
             print(len(next_frame))
             rectOrg = patches.Rectangle(
                 (ox, oy), ow, oh, linewidth=1, edgecolor='g', facecolor='none')
 
             # Add the patch to the Axes
-            ax.add_patch(rect)
-            ax.add_patch(rectOrg)
-
-            plt.show()
+            patch = ax.add_artist(rect)
+            #ax.add_patch(rectOrg)
+            frames.append([im,patch])
+            #plt.show()
             self.update_filter(F, output)
+        ani = animation.ArtistAnimation(fig,frames,interval=30,blit=True,repeat_delay=0)
+        plt.show()
 
     def apply_filter(self, frame):
         return self.filter[0] * frame

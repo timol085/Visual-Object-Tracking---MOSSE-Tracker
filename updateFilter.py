@@ -25,6 +25,7 @@ def updateWindow(x_org, y_org, w_org, h_org, img, thr=8):
         dx = peak[1] - (w_org / 2)
         dy = peak[0] - (h_org / 2)
     else:
-        return "Error, Occluded Object"
+        dx = peak[1] - (w_org / 2)
+        dy = peak[0] - (h_org / 2)
     print("dx", x_org-dx)
     return int(x_org + dx), int(y_org + dy)
