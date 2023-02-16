@@ -74,7 +74,7 @@ class MosseTracker:
 
             # Create a Rectangle patch
             rect = patches.Rectangle(
-                (ux, len(next_frame)-h-uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
+                (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
             print(len(next_frame))
             rectOrg = patches.Rectangle(
                 (ox, oy), ow, oh, linewidth=1, edgecolor='g', facecolor='none')
