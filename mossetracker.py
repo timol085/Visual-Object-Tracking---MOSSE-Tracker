@@ -58,6 +58,7 @@ class MosseTracker:
             # next_frame= np.array(grey_im)
 
             x, y, w, h = self.selected_region
+            
             # np.fft.fft2(cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
             F = np.fft.fft2(cv2.cvtColor(
                 crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
