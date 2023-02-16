@@ -17,14 +17,14 @@ def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
 
 def updateWindow(x_org, y_org, w_org, h_org, img, thr=8):
 
-    peak, psr = get_peak_and_psr(img)
+    peak, psr = get_peak_and_psr(np.fft.ifft2(img).real)
     print("PEAK", peak)
     print("ORG", x_org, w_org/2)
     # If PSR < 7 then the object may be occluded
     if psr > thr:
-        dx = peak[0] - (w_org / 2)
-        dy = peak[1] - (h_org / 2)
+        dx = peak[1] - (w_org / 2)
+        dy = peak[0] - (h_org / 2)
     else:
         return "Error, Occluded Object"
     print("dx", x_org-dx)
-    return int(x_org - dx), int(y_org - dy)
+    return int(x_org + dx), int(y_org + dy)
