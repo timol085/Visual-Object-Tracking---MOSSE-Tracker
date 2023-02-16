@@ -58,10 +58,19 @@ class MosseTracker:
             # next_frame= np.array(grey_im)
 
             x, y, w, h = self.selected_region
-            
-            # np.fft.fft2(cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
-            F = np.fft.fft2(cv2.cvtColor(
-                crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
+
+            # np.fft.fft2(cv2.cvtColor(crop_image(
+            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
+            # log_img = np.log(cv2.cvtColor(crop_image(
+            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY)+1)
+            # mean, std = np.mean(log_img), np.std(log_img)
+            # img_norm = (log_img - mean) / std
+            # F = np.fft.fft2(img_norm)
+
+            img = (cv2.cvtColor(crop_image(
+                next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
+            F = np.fft.fft2(img)
+
             output = self.apply_filter(F)
             ux, uy = updateWindow(x, y, w, h, output)
             result_img_org = np.fft.ifft2(output).real
@@ -71,10 +80,10 @@ class MosseTracker:
             print("NEXT FRAME", (ux, uy, w, h))
 
             self.selected_region = (ux, uy, w, h)
-            
 
             # Display the image
-            im = ax.imshow(next_frame,animated=True)
+            im = ax.imshow(
+                (cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB)), animated=True)
 
             # Create a Rectangle patch
             rect = patches.Rectangle(
@@ -85,11 +94,12 @@ class MosseTracker:
 
             # Add the patch to the Axes
             patch = ax.add_artist(rect)
-            #ax.add_patch(rectOrg)
-            frames.append([im,patch])
-            #plt.show()
+            # ax.add_patch(rectOrg)
+            frames.append([im, patch])
+            # plt.show()
             self.update_filter(F, output)
-        ani = animation.ArtistAnimation(fig,frames,interval=30,blit=True,repeat_delay=0)
+        ani = animation.ArtistAnimation(
+            fig, frames, interval=30, blit=True, repeat_delay=0)
         plt.show()
 
     def apply_filter(self, frame):

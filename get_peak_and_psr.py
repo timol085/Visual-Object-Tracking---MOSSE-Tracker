@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
 
+
 def get_peak_and_psr(img):
     # Calculate peak value
     gmax = np.max(img)
-    print(img.shape)
 
     # Get indices of peak value
     peak_index = np.where(img == gmax)
@@ -29,4 +29,4 @@ def get_peak_and_psr(img):
     # Calculate PSR
     psr = (gmax - mean) / std
 
-    return [peak_x,peak_y],psr
+    return [peak_x, peak_y], psr
