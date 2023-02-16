@@ -114,5 +114,3 @@ class MosseTracker:
     def update_filter(self, F, G):
         self.filter = updateFilter(self.filter[1], self.filter[2], F, G)
 
-    def apply_filter_to_frame(self):
-        pass
