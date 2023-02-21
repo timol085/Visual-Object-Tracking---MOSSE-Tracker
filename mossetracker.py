@@ -59,17 +59,15 @@ class MosseTracker:
 
             x, y, w, h = self.selected_region
 
-            # np.fft.fft2(cv2.cvtColor(crop_image(
-            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
-            # log_img = np.log(cv2.cvtColor(crop_image(
-            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY)+1)
-            # mean, std = np.mean(log_img), np.std(log_img)
-            # img_norm = (log_img - mean) / std
-            # F = np.fft.fft2(img_norm)
+            log_img = np.log(cv2.cvtColor(crop_image(
+                next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY).astype(np.float64)+1)
+            mean, std = np.mean(log_img), np.std(log_img)
+            img_norm = (log_img - mean) / std
+            F = np.fft.fft2(img_norm)
 
-            img = (cv2.cvtColor(crop_image(
-                next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
-            F = np.fft.fft2(img)
+            # img = (cv2.cvtColor(crop_image(
+            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
+            # F = np.fft.fft2(img)
 
             output = self.apply_filter(F)
             ux, uy = updateWindow(x, y, w, h, output)

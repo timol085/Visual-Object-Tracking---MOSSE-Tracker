@@ -18,16 +18,15 @@ def filterInit(img):
     # Calculate MOSSE filter
     f = np.fft.fft2(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY))
 
-    A = G * np.conj(f)
-    B = f * np.conj(f)
+    A = 0#G * np.conj(f)
+    B = 0#f * np.conj(f)
     for i in range(0, len(img)):
+        log_img = np.log(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY).astype(np.float64)+1)
+        mean, std = np.mean(log_img), np.std(log_img)
+        img_norm = (log_img - mean) / std
+        F_i = np.fft.fft2(img_norm)
 
-        # log_img = np.log(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY)+1)
-        # mean, std = np.mean(log_img), np.std(log_img)
-        # img_norm = (log_img - mean) / std
-        # F_i = np.fft.fft2(img_norm)
-
-        F_i = np.fft.fft2(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY))
+        #F_i = np.fft.fft2(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY))
         A += G * np.conjugate(F_i)
         B += F_i * np.conjugate(F_i)
 
