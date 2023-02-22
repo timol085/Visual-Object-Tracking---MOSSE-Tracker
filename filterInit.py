@@ -42,6 +42,7 @@ def filterInit(img):
 
     result_img_org = img_org * H
     result_img_org = np.fft.ifft2(result_img_org).real
+
     plt.imshow(result_img_org)
     plt.show()
 
