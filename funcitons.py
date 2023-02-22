@@ -59,14 +59,6 @@ def rotate_image(image, angle, origin):
     return result
 
 
-"""
-Should:
--Roate images
--Warp images
--Skew images
-
-"""
-
 
 def rnd(low, high):
     return random.uniform(low, high)
@@ -87,8 +79,15 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
     augmented_images_cropped.append(flipped_image_horizontal)
     augmented_images_cropped.append(flipped_image_vertical)
 
+    
+
     # Blur
     ksize = (15, 15)
+    blurred_image = cv2.blur(img_cropped, ksize)
+    augmented_images_cropped.append(blurred_image)
+
+    # Blur
+    ksize = (30, 30)
     blurred_image = cv2.blur(img_cropped, ksize)
     augmented_images_cropped.append(blurred_image)
 

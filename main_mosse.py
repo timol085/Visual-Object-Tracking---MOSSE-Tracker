@@ -1,6 +1,6 @@
 from mossetracker import MosseTracker
 
-tracker = MosseTracker()
+tracker = MosseTracker(gray_scale=False)
 
 tracker.initialize("surfer.mp4")
 
