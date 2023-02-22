@@ -6,6 +6,7 @@ from scipy import misc
 from matplotlib import pyplot as plt
 from PIL import Image
 import math
+import pathlib
 
 
 def transform_images(number_of_images, img):
@@ -117,3 +118,17 @@ def get_selected_region_from_frame(frame):
     x, y, width, height = cv2.selectROI(frame)
 
     return (x, y, width, height)
+
+def get_detected_region_from_frame(frame):
+    cascade_path = pathlib.Path(cv2.__file__).parent.absolute() / "data/haarcascade_frontalface_default.xml"
+    clf = cv2.CascadeClassifier(str(cascade_path))
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = clf.detectMultiScale(
+        gray,
+        scaleFactor= 1.1,
+        minNeighbors= 5,
+        minSize= (30,30),
+        flags= cv2.CASCADE_SCALE_IMAGE
+    )
+    x,y,w,h = faces[0]
+    return (int(x), int(y), int(w), int(h))
