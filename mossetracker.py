@@ -54,7 +54,6 @@ class MosseTracker:
             if not success:
                 break
             # grey_im = Image.fromarray(next_frame).convert('L')
-
             # next_frame= np.array(grey_im)
 
             x, y, w, h = self.selected_region
@@ -65,9 +64,9 @@ class MosseTracker:
             img_norm = (log_img - mean) / std
             F = np.fft.fft2(img_norm)
 
-            # img = (cv2.cvtColor(crop_image(
-            #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
-            # F = np.fft.fft2(img)
+            img = (cv2.cvtColor(crop_image(
+                next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
+            F = np.fft.fft2(img)
 
             output = self.apply_filter(F)
             ux, uy = updateWindow(x, y, w, h, output)
@@ -111,4 +110,3 @@ class MosseTracker:
 
     def update_filter(self, F, G):
         self.filter = updateFilter(self.filter[1], self.filter[2], F, G)
-
