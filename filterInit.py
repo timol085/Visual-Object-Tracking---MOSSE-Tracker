@@ -2,6 +2,8 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+from feature_extraction import hog_extraction
+
 
 
 def filterInit(img,gray_scale=False):
@@ -10,15 +12,12 @@ def filterInit(img,gray_scale=False):
     center_x = width // 2 
     sigma = 2 #10 king
     
-
-
     # Create gaussian filter
     # g_x = cv2.getGaussianKernel(height, sigma)
     # g_y = cv2.getGaussianKernel(width, sigma)
     # g = np.outer(g_x, g_y)
 
 
-        
     # create a rectangular grid out of two given one-dimensional arrays
     xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
     # calculating distance of each pixel from roi center
@@ -77,6 +76,12 @@ def filterInit(img,gray_scale=False):
             normB = (log_B - meanB) / stdB
             normG = (log_G - meanG) / stdG
             normR = (log_R - meanR) / stdR
+           
+            # HOG extraction
+            # fd = hog_extraction(normB,normG,normR)
+            
+            
+
             F_Bi = np.fft.fft2(normB)
             F_Gi = np.fft.fft2(normG)
             F_Ri = np.fft.fft2(normR)
