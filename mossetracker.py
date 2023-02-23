@@ -12,6 +12,8 @@ from matplotlib import cm
 from matplotlib import animation
 
 
+
+
 class MosseTracker:
 
     def __init__(self,gray_scale=False):
@@ -28,8 +30,10 @@ class MosseTracker:
         self.read_first_frame()
         x, y, w, h = self.get_selected_region(self.first_frame)
         self.selected_region = (x, y, w, h)
+        
         augmented_images = self.augmented_images(
             25, self.first_frame, (x, y, w, h))
+        print(len(augmented_images))
         self.filter = self.create_filter(augmented_images)
 
     def read_first_frame(self):
@@ -43,7 +47,8 @@ class MosseTracker:
 
     def track(self):
         n_times_occluded = [0]
-        cap = self.read_first_frame()
+        cap = cv2.VideoCapture(self.video_url)
+        success, next_frame = cap.read()
         success = True
         peak = []
         ox, oy, ow, oh = self.selected_region
@@ -51,7 +56,8 @@ class MosseTracker:
         fig, ax = plt.subplots()
         count = 1
         while success:
-            success, next_frame = cap.read()
+            
+            print(self.selected_region)
 
             if not success:
                 break
@@ -78,16 +84,7 @@ class MosseTracker:
                 log_R = np.log(cv2.cvtColor(crop_image(
                     next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)+1)
 
-                # img_B = cv2.cvtColor(crop_image(
-                #      next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)
-                # log_B = np.log(cv2.cvtColor(img_B, cv2.COLOR_BGR2GRAY) + 1)
-                # img_G = cv2.cvtColor(crop_image(
-                #      next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)
-                # log_G = np.log(cv2.cvtColor(img_G, cv2.COLOR_BGR2GRAY) + 1)
-                # img_R = cv2.cvtColor(crop_image(
-                #      next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)
-                # log_R = np.log(cv2.cvtColor(img_R, cv2.COLOR_BGR2GRAY) + 1)
-
+        
                 meanB, stdB = np.mean(log_B), np.std(log_B)
                 meanG, stdG = np.mean(log_G), np.std(log_G)
                 meanR, stdR = np.mean(log_R), np.std(log_R)
@@ -97,13 +94,13 @@ class MosseTracker:
                 norm_R = (log_R - meanR) / stdR
 
                 # Cosine window 
-                window_col = np.hanning(w)
-                window_row = np.hanning(h)
-                col_mask, row_mask = np.meshgrid(window_col, window_row)
-                window = col_mask * row_mask
-                norm_B = norm_B * window
-                norm_G = norm_G * window
-                norm_R = norm_R * window
+                # window_col = np.hanning(w)
+                # window_row = np.hanning(h)
+                # col_mask, row_mask = np.meshgrid(window_col, window_row)
+                # window = col_mask * row_mask
+                # norm_B = norm_B * window
+                # norm_G = norm_G * window
+                # norm_R = norm_R * window
                 
 
                 F_Bi = np.fft.fft2(norm_B)
@@ -113,6 +110,9 @@ class MosseTracker:
                 output_B,output_G,output_R = self.apply_filter([F_Bi,F_Gi,F_Ri])
 
                 output = output_B + output_G + output_R
+                # plt.imshow(np.fft.ifft2(output).real)
+                # plt.show()
+                # break
 
             ux, uy = updateWindow(x, y, w, h, output, n_times_occluded)
             result_img_org = np.fft.ifft2(output).real
@@ -122,14 +122,14 @@ class MosseTracker:
         
 
             self.selected_region = (ux, uy, w, h)
+            
 
             # Display the image
-            im = ax.imshow(
-                (cv2.cvtColor(next_frame, cv2.COLOR_BGR2HSV)), animated=True)
+            im = ax.imshow(next_frame,cmap="brg", animated=True)
 
             # Create a Rectangle patch
             rect = patches.Rectangle(
-                (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
+                (ux, uy), w, h, linewidth=2, edgecolor='r', facecolor='none')
     
 
             # Add the patch to the Axes
@@ -144,6 +144,7 @@ class MosseTracker:
 
             #print("Frame " + str(count) + " done")
             count +=1
+            success, next_frame = cap.read()
         print("TIMES OCCLUDED",n_times_occluded, "/",count-1)
         ani = animation.ArtistAnimation(
             fig, frames, interval=30, blit=True, repeat_delay=0)

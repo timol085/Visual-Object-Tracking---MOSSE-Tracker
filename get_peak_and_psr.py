@@ -4,6 +4,7 @@ import cv2
 
 def get_peak_and_psr(img):
     # Calculate peak value
+    img = (img - np.min(img))/(np.max(img)-np.min(img))
     gmax = np.max(img)
 
     # Get indices of peak value

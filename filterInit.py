@@ -8,24 +8,24 @@ def filterInit(img,gray_scale=False):
     height, width, _ = img[0].shape
     center_y = height//2
     center_x = width // 2 
-    sigma = 2 #10 king
+    sigma = 1 #10 king
     
 
 
     # Create gaussian filter
-    # g_x = cv2.getGaussianKernel(height, sigma)
-    # g_y = cv2.getGaussianKernel(width, sigma)
-    # g = np.outer(g_x, g_y)
+    g_x = cv2.getGaussianKernel(height, sigma)
+    g_y = cv2.getGaussianKernel(width, sigma)
+    g = np.outer(g_x, g_y)
 
 
         
     # create a rectangular grid out of two given one-dimensional arrays
-    xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
-    # calculating distance of each pixel from roi center
-    dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
+    # xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
+    # # calculating distance of each pixel from roi center
+    # dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
         
-    response = np.exp(-dist)
-    g = (response - response.min()) / (response.max() - response.min())
+    # response = np.exp(-dist)
+    # g = (response - response.min()) / (response.max() - response.min())
 
     G = np.fft.fft2(g)
 
@@ -59,12 +59,7 @@ def filterInit(img,gray_scale=False):
             B += F_i * np.conjugate(F_i)
 
         else:
-            # img_B = cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)
-            # log_B = np.log(cv2.cvtColor(img_B, cv2.COLOR_BGR2GRAY) + 1)
-            # img_G = cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)
-            # log_G = np.log(cv2.cvtColor(img_G, cv2.COLOR_BGR2GRAY) + 1)
-            # img_R = cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)
-            # log_R = np.log(cv2.cvtColor(img_R, cv2.COLOR_BGR2GRAY) + 1)
+
             
             log_B = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)+1)
             log_G = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)+1)
@@ -137,6 +132,6 @@ def filterInit(img,gray_scale=False):
     if gray_scale:
         plt.imshow(np.fft.ifft2(H).real,cmap="gray")
         plt.show()
-        return H, A, B
+        return H, A, B # H: Filter A/B, 
     else:
         return [[A_B/B_B,A_B,B_B], [A_G/B_G,A_G,B_G], [A_R/B_R,A_R,B_R]]
