@@ -156,3 +156,16 @@ def get_detected_region_from_frame(frame):
     else:
         return 1
     return (int(x), int(y), int(w), int(h))
+
+def preprocessing(img, width, height):
+    log = np.log(img + 1)
+    mean, std = np.mean(log), np.std(log)
+    norm = (log - mean) / std
+    
+    window_col = np.hanning(width)
+    window_row = np.hanning(height)
+    col_mask, row_mask = np.meshgrid(window_col, window_row)
+    window = col_mask * row_mask
+    img_norm = norm * window
+    
+    return img_norm

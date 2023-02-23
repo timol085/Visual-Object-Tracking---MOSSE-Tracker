@@ -3,7 +3,7 @@ from funcitons import get_selected_region_from_frame, get_augmented_images_cropp
 from feature_extraction import hog_extraction
 from filterInit import filterInit
 from matplotlib import pyplot as plt
-from funcitons import crop_image
+from funcitons import crop_image, preprocessing
 from get_peak_and_psr import get_peak_and_psr
 from updateFilter import updateWindow, updateFilter
 import matplotlib.patches as patches
@@ -13,12 +13,18 @@ from matplotlib import cm
 from matplotlib import animation
 
 
-
-
+# Global variables
+global GRAY_SCALE
+global RGB
+global HOG
+global RESNET
+GRAY_SCALE = 0
+RGB = 1
+HOG = 2
+RESNET = 3
 class MosseTracker:
-
-    def __init__(self,gray_scale=False):
-        self.is_gray_scale = gray_scale
+    def __init__(self, chosen_channel=GRAY_SCALE):
+        self.channel = chosen_channel
         self.video_url = None
         self.first_frame = None
         self.filter = None
@@ -85,17 +91,17 @@ class MosseTracker:
                 break
             x, y, w, h = self.selected_region
 
-            if self.is_gray_scale:
-                log_img = np.log(cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY).astype(np.float64)+1)
-                mean, std = np.mean(log_img), np.std(log_img)
-                img_norm = (log_img - mean) / std
+            if self.channel == GRAY_SCALE:
+                img_norm = preprocessing((cv2.cvtColor(crop_image(
+                    next_frame, x, y, w, h),cv2.COLOR_BGR2GRAY).astype(np.float64)), width=w, height=h)
                 F = np.fft.fft2(img_norm)
                 output = self.apply_filter(F)
                 # img = (cv2.cvtColor(crop_image(
                 #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
                 # F = np.fft.fft2(img)
             else:
+                
+                # Uppdatera så att preprocessing används här också
                 log_B = np.log(cv2.cvtColor(crop_image(
                     next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)+1)
                 log_G = np.log(cv2.cvtColor(crop_image(
@@ -155,7 +161,7 @@ class MosseTracker:
             # ax.add_patch(rectOrg)
             frames.append([im, patch])
             # plt.show()
-            if self.is_gray_scale:
+            if self.channel == GRAY_SCALE:
                 self.update_filter(F, output)
             else:
                 self.update_filter_multi([F_Bi,F_Gi,F_Ri],[output_B,output_G,output_R])
@@ -173,7 +179,7 @@ class MosseTracker:
 
     def apply_filter(self, frame):
         
-        if self.is_gray_scale:
+        if self.channel == GRAY_SCALE:
             return self.filter[0] * frame
         else:
             return [self.filter[0][0]*frame[0],self.filter[1][0]*frame[1],self.filter[2][0]*frame[2]]
@@ -182,7 +188,7 @@ class MosseTracker:
         return get_augmented_images_cropped(n_images, img, region)
 
     def create_filter(self, array_of_images):
-        return filterInit(array_of_images,gray_scale=self.is_gray_scale)
+        return filterInit(array_of_images, channel=GRAY_SCALE)
 
     def update_filter(self, F, G):
         self.filter = updateFilter(self.filter[1], self.filter[2], F, G)

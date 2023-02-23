@@ -3,9 +3,19 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 from feature_extraction import hog_extraction
+from funcitons import preprocessing
 
-def filterInit(img,gray_scale=False):
-    height, width, _ = img[0].shape
+global GRAY_SCALE
+global RGB
+global HOG
+global RESNET
+GRAY_SCALE = 0
+RGB = 1
+HOG = 2
+RESNET = 3
+
+def filterInit(img, channel):
+    height, width, num_channels = img[0].shape
     center_y = height//2
     center_x = width // 2 
     sigma = 2 #10 king
@@ -14,21 +24,6 @@ def filterInit(img,gray_scale=False):
     g_x = cv2.getGaussianKernel(height, sigma)
     g_y = cv2.getGaussianKernel(width, sigma)
     g = np.outer(g_x, g_y)
-
-
-    # # create a rectangular grid out of two given one-dimensional arrays
-    # xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
-    # # calculating distance of each pixel from roi center
-    # dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
-        
-    # create a rectangular grid out of two given one-dimensional arrays
-    # xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
-    # # calculating distance of each pixel from roi center
-    # dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
-        
-    # response = np.exp(-dist)
-    # g = (response - response.min()) / (response.max() - response.min())
-
     G = np.fft.fft2(g)
 
     # Calculate MOSSE filter
@@ -43,48 +38,49 @@ def filterInit(img,gray_scale=False):
     B_G = 0
     B_R = 0
     for i in range(0, len(img)):
-        if gray_scale:
-            log_img = np.log(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY).astype(np.float64)+1)
-            mean, std = np.mean(log_img), np.std(log_img)
-            img_norm = (log_img - mean) / std
-
-            window_col = np.hanning(width)
-            window_row = np.hanning(height)
-            col_mask, row_mask = np.meshgrid(window_col, window_row)
-            window = col_mask * row_mask
-            img_norm = img_norm * window
-        
-            F_i = np.fft.fft2(img_norm)
-
-            #F_i = np.fft.fft2(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY))
-            A += G * np.conjugate(F_i)
-            B += F_i * np.conjugate(F_i)
+        if channel == GRAY_SCALE:
+           # Call preprocessing
+           img_gray = cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY).astype(np.float64)
+           img_norm = preprocessing(img_gray, width, height)
+           
+           F_i = np.fft.fft2(img_norm)
+           #F_i = np.fft.fft2(cv2.cvtColor(img[i], cv2.COLOR_BGR2GRAY))
+           A += G * np.conjugate(F_i)
+           B += F_i * np.conjugate(F_i)
 
         else:
-
-            # Preprocessing
-            log_B = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)+1)
-            log_G = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)+1)
-            log_R = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)+1)
+            # Preprocessing - if/Switch-case to handle different multichannel cases
+            if channel == RGB:
+                img_B = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 0].astype(np.float64)
+                img_G = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 1].astype(np.float64)
+                img_R = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 2].astype(np.float64)
+                
+                normB = preprocessing(img_B, width, height)
+                normG = preprocessing(img_G, width, height)
+                normR = preprocessing(img_R, width, height)
+        
+                F_Bi = np.fft.fft2(normB)
+                F_Gi = np.fft.fft2(normG)
+                F_Ri = np.fft.fft2(normR)
     
-
-            meanB, stdB = np.mean(log_B), np.std(log_B)
-            meanG, stdG = np.mean(log_G), np.std(log_G)
-            meanR, stdR = np.mean(log_R), np.std(log_R)
-            normB = (log_B - meanB) / stdB
-            normG = (log_G - meanG) / stdG
-            normR = (log_R - meanR) / stdR
-           
             # HOG extraction - Use the feature vectors not the hog images 
-            fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(normB,normG,normR)
+            if channel == HOG:
+                img_B = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 0].astype(np.float64)
+                img_G = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 1].astype(np.float64)
+                img_R = cv2.cvtColor(img[i], cv2.COLOR_BGR2HSV)[:, :, 2].astype(np.float64)
+                
+                normB = preprocessing(img_B, width, height)
+                normG = preprocessing(img_G, width, height)
+                normR = preprocessing(img_R, width, height)
+                
+                fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(normB,normG,normR)
+                F_Bi = np.fft.fft2(imgB)
+                F_Gi = np.fft.fft2(imgG)
+                F_Ri = np.fft.fft2(imgR)
             
             # Color extraction
-            
+            # CODE::::
             #Concatenate the feature vectors of HOG and color extractions 
-
-            F_Bi = np.fft.fft2(imgB)
-            F_Gi = np.fft.fft2(imgG)
-            F_Ri = np.fft.fft2(imgR)
 
             A_B += G * np.conjugate(F_Bi)
             A_G += G * np.conjugate(F_Gi)
@@ -95,16 +91,14 @@ def filterInit(img,gray_scale=False):
             B_R += F_Ri * np.conjugate(F_Ri)
             
 
-    if not gray_scale:
+    if channel != GRAY_SCALE:
         A = A_B + A_G + A_R 
         B = B_B + B_G + B_R
-
-            
 
     H = A/B
 
     # Test original image
-    if gray_scale:
+    if channel == GRAY_SCALE:
 
         img_org = np.fft.fft2(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY))
 
@@ -139,7 +133,7 @@ def filterInit(img,gray_scale=False):
         plt.imshow(result_img_org)
         plt.show()
 
-    if gray_scale:
+    if channel ==   GRAY_SCALE:
         plt.imshow(np.fft.ifft2(H).real,cmap="gray")
         plt.show()
         return H, A, B # H: Filter A/B, 
