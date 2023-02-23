@@ -1,5 +1,6 @@
 import cv2
 from funcitons import get_selected_region_from_frame, get_augmented_images_cropped, get_detected_region_from_frame
+from feature_extraction import hog_extraction
 from filterInit import filterInit
 from matplotlib import pyplot as plt
 from funcitons import crop_image
@@ -77,7 +78,7 @@ class MosseTracker:
         fig, ax = plt.subplots()
         count = 1
         while success:
-            
+            success, next_frame = cap.read()
             print(self.selected_region)
 
             if not success:
@@ -112,13 +113,13 @@ class MosseTracker:
                 norm_R = (log_R - meanR) / stdR
 
                 # Cosine window 
-                # window_col = np.hanning(w)
-                # window_row = np.hanning(h)
-                # col_mask, row_mask = np.meshgrid(window_col, window_row)
-                # window = col_mask * row_mask
-                # norm_B = norm_B * window
-                # norm_G = norm_G * window
-                # norm_R = norm_R * window
+                window_col = np.hanning(w)
+                window_row = np.hanning(h)
+                col_mask, row_mask = np.meshgrid(window_col, window_row)
+                window = col_mask * row_mask
+                norm_B = norm_B * window
+                norm_G = norm_G * window
+                norm_R = norm_R * window
                 
                 fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(norm_B,norm_G,norm_R)
 

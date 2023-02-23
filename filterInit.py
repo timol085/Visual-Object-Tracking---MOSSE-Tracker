@@ -8,7 +8,7 @@ def filterInit(img,gray_scale=False):
     height, width, _ = img[0].shape
     center_y = height//2
     center_x = width // 2 
-    sigma = 1 #10 king
+    sigma = 2 #10 king
     
     # Create gaussian filter
     g_x = cv2.getGaussianKernel(height, sigma)
@@ -62,7 +62,7 @@ def filterInit(img,gray_scale=False):
 
         else:
 
-            
+            # Preprocessing
             log_B = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)+1)
             log_G = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)+1)
             log_R = np.log(cv2.cvtColor(img[i],cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)+1)
@@ -75,8 +75,12 @@ def filterInit(img,gray_scale=False):
             normG = (log_G - meanG) / stdG
             normR = (log_R - meanR) / stdR
            
-            # HOG extraction
+            # HOG extraction - Use the feature vectors not the hog images 
             fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(normB,normG,normR)
+            
+            # Color extraction
+            
+            #Concatenate the feature vectors of HOG and color extractions 
 
             F_Bi = np.fft.fft2(imgB)
             F_Gi = np.fft.fft2(imgG)

@@ -79,9 +79,6 @@ def rotate_image(image, angle, origin):
     return result
 
 
-<<<<<<< HEAD
-
-=======
 """
 Should:
 -Roate images
@@ -89,7 +86,6 @@ Should:
 -Skew images
 
 """
->>>>>>> f07e4f9627ccdea5bbb6713bee82c304ec4a4ea2
 def rnd(low, high):
     return random.uniform(low, high)
 
