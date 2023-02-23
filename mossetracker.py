@@ -1,5 +1,6 @@
 import cv2
 from funcitons import get_selected_region_from_frame, get_augmented_images_cropped
+from feature_extraction import hog_extraction
 from filterInit import filterInit
 from matplotlib import pyplot as plt
 from funcitons import crop_image
@@ -105,10 +106,12 @@ class MosseTracker:
                 norm_G = norm_G * window
                 norm_R = norm_R * window
                 
+                fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(norm_B,norm_G,norm_R)
 
-                F_Bi = np.fft.fft2(norm_B)
-                F_Gi = np.fft.fft2(norm_G)
-                F_Ri = np.fft.fft2(norm_R)
+
+                F_Bi = np.fft.fft2(imgB)
+                F_Gi = np.fft.fft2(imgG)
+                F_Ri = np.fft.fft2(imgR)
     
                 output_B,output_G,output_R = self.apply_filter([F_Bi,F_Gi,F_Ri])
 
@@ -118,8 +121,6 @@ class MosseTracker:
             result_img_org = np.fft.ifft2(output).real
             # plt.imshow(result_img_org)
             # plt.show()
-
-        
 
             self.selected_region = (ux, uy, w, h)
 

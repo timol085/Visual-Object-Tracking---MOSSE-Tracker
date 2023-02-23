@@ -4,8 +4,6 @@ import matplotlib.image as mpimg
 import numpy as np
 from feature_extraction import hog_extraction
 
-
-
 def filterInit(img,gray_scale=False):
     height, width, _ = img[0].shape
     center_y = height//2
@@ -13,18 +11,18 @@ def filterInit(img,gray_scale=False):
     sigma = 2 #10 king
     
     # Create gaussian filter
-    # g_x = cv2.getGaussianKernel(height, sigma)
-    # g_y = cv2.getGaussianKernel(width, sigma)
-    # g = np.outer(g_x, g_y)
+    g_x = cv2.getGaussianKernel(height, sigma)
+    g_y = cv2.getGaussianKernel(width, sigma)
+    g = np.outer(g_x, g_y)
 
 
-    # create a rectangular grid out of two given one-dimensional arrays
-    xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
-    # calculating distance of each pixel from roi center
-    dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
+    # # create a rectangular grid out of two given one-dimensional arrays
+    # xx, yy = np.meshgrid(np.arange(0, width), np.arange(0, height))
+    # # calculating distance of each pixel from roi center
+    # dist = (np.square(xx - center_x) + np.square(yy - center_y)) / (2*sigma)
         
-    response = np.exp(-dist)
-    g = (response - response.min()) / (response.max() - response.min())
+    # response = np.exp(-dist)
+    # g = (response - response.min()) / (response.max() - response.min())
 
     G = np.fft.fft2(g)
 
@@ -78,13 +76,11 @@ def filterInit(img,gray_scale=False):
             normR = (log_R - meanR) / stdR
            
             # HOG extraction
-            # fd = hog_extraction(normB,normG,normR)
-            
-            
+            fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(normB,normG,normR)
 
-            F_Bi = np.fft.fft2(normB)
-            F_Gi = np.fft.fft2(normG)
-            F_Ri = np.fft.fft2(normR)
+            F_Bi = np.fft.fft2(imgB)
+            F_Gi = np.fft.fft2(imgG)
+            F_Ri = np.fft.fft2(imgR)
 
             A_B += G * np.conjugate(F_Bi)
             A_G += G * np.conjugate(F_Gi)
@@ -136,7 +132,7 @@ def filterInit(img,gray_scale=False):
         result_img_org_R = np.fft.ifft2(result_img_org_R).real
         result_img_org = result_img_org_B + result_img_org_G + result_img_org_R
 
-        plt.imshow(result_img_org,cmap="gray")
+        plt.imshow(result_img_org)
         plt.show()
 
     if gray_scale:
