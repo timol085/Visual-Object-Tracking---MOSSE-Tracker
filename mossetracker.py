@@ -1,10 +1,5 @@
 import cv2
-<<<<<<< HEAD
-from funcitons import get_selected_region_from_frame, get_augmented_images_cropped
-from feature_extraction import hog_extraction
-=======
 from funcitons import get_selected_region_from_frame, get_augmented_images_cropped, get_detected_region_from_frame
->>>>>>> f07e4f9627ccdea5bbb6713bee82c304ec4a4ea2
 from filterInit import filterInit
 from matplotlib import pyplot as plt
 from funcitons import crop_image
@@ -33,7 +28,6 @@ class MosseTracker:
     def initialize(self, video_url, useDetection=False):
         self.video_url = video_url
         self.read_first_frame()
-<<<<<<< HEAD
         self.useDetection=useDetection
         
         #do eiter detection or let user select regions
@@ -56,15 +50,6 @@ class MosseTracker:
                 #if it cannot find anything to detect, it will ask the user
                 self.initialize(video_url)
                 
-=======
-        x, y, w, h = self.get_selected_region(self.first_frame)
-        self.selected_region = (x, y, w, h)
-        
-        augmented_images = self.augmented_images(
-            25, self.first_frame, (x, y, w, h))
-        print(len(augmented_images))
-        self.filter = self.create_filter(augmented_images)
->>>>>>> f9f1a1ba4b7047310390f593df11302d22a5c34a
 
     def read_first_frame(self):
         cap = cv2.VideoCapture(self.video_url)
