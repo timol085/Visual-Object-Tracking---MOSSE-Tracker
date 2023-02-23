@@ -67,8 +67,6 @@ Should:
 -Skew images
 
 """
-
-
 def rnd(low, high):
     return random.uniform(low, high)
 
@@ -116,7 +114,6 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
 
 def get_selected_region_from_frame(frame):
     x, y, width, height = cv2.selectROI(frame)
-
     return (x, y, width, height)
 
 def get_detected_region_from_frame(frame):
@@ -130,5 +127,9 @@ def get_detected_region_from_frame(frame):
         minSize= (30,30),
         flags= cv2.CASCADE_SCALE_IMAGE
     )
-    x,y,w,h = faces[0]
+    
+    if len(faces) >0:
+        x,y,w,h = faces[0]
+    else:
+        return 1
     return (int(x), int(y), int(w), int(h))

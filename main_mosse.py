@@ -2,6 +2,8 @@ from mossetracker import MosseTracker
 
 tracker = MosseTracker()
 
-tracker.initialize("surfer.mp4")
+#redo after not found / out of bounds
+
+tracker.initialize("rihanna.mp4", useDetection=True)
 
 tracker.track()
