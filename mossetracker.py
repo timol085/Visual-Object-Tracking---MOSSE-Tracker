@@ -80,16 +80,11 @@ class MosseTracker:
         
     def track(self):
         n_times_occluded = [0]
-<<<<<<< HEAD
         cap = self.read_first_frame()
         image_width= self.first_frame.shape[1]
         image_height= self.first_frame.shape[0]
         print(image_width)
         print(image_height)
-=======
-        cap = cv2.VideoCapture(self.video_url)
-        success, next_frame = cap.read()
->>>>>>> f9f1a1ba4b7047310390f593df11302d22a5c34a
         success = True
         peak = []
         ox, oy, ow, oh = self.selected_region
