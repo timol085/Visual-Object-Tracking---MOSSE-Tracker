@@ -6,6 +6,7 @@ from scipy import misc
 from matplotlib import pyplot as plt
 from PIL import Image
 import math
+import pathlib
 
 
 def transform_images(number_of_images, img):
@@ -59,7 +60,17 @@ def rotate_image(image, angle, origin):
     return result
 
 
+<<<<<<< HEAD
 
+=======
+"""
+Should:
+-Roate images
+-Warp images
+-Skew images
+
+"""
+>>>>>>> f07e4f9627ccdea5bbb6713bee82c304ec4a4ea2
 def rnd(low, high):
     return random.uniform(low, high)
 
@@ -114,5 +125,22 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
 
 def get_selected_region_from_frame(frame):
     x, y, width, height = cv2.selectROI(frame)
-
     return (x, y, width, height)
+
+def get_detected_region_from_frame(frame):
+    cascade_path = pathlib.Path(cv2.__file__).parent.absolute() / "data/haarcascade_frontalface_default.xml"
+    clf = cv2.CascadeClassifier(str(cascade_path))
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = clf.detectMultiScale(
+        gray,
+        scaleFactor= 1.1,
+        minNeighbors= 5,
+        minSize= (30,30),
+        flags= cv2.CASCADE_SCALE_IMAGE
+    )
+    
+    if len(faces) >0:
+        x,y,w,h = faces[0]
+    else:
+        return 1
+    return (int(x), int(y), int(w), int(h))
