@@ -55,8 +55,10 @@ class MosseTracker:
                 ret = self.get_selected_region(self.first_frame, True)
                 if ret !=1: 
                     canRead=False 
-                    x, y, w, h = returnvalue
+                    x, y, w, h = ret
                     self.selected_region = (x, y, w, h)
+                    augmented_images = self.augmented_images(12, self.first_frame, (x, y, w, h))
+                    self.filter = self.create_filter(augmented_images)
                 canRead,self.first_frame=cap.read()
 
             print("Cant find")
@@ -140,14 +142,14 @@ class MosseTracker:
             i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
             i_F = np.fft.fft2(i_img_norm)
             i_output = self.apply_filter(i_F, i)
-        if output is None:
-            output = i_output
-        else:
-            output += i_output
-            print(output.shape)
+            if output is None:
+                output = i_output
+            else:
+                output += i_output
+                print(output.shape)
 
-        all_F.append(i_F)
-        all_G.append(i_output)
+            all_F.append(i_F)
+            all_G.append(i_output)
         return output
             
     def draw_rectangle(self,ux,uy,w,h, ox,oy, ow, oh, ax, frames, im):
