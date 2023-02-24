@@ -73,11 +73,11 @@ class MosseTracker:
         while success:
             success, next_frame = cap.read()
             print(self.selected_region)
-            img_color_mode = cv2.cvtColor(crop_image(next_frame, ox, oy, ow, oh), self.color_mode).astype(np.float64)
+            x, y, w, h = self.selected_region
+            img_color_mode = cv2.cvtColor(crop_image(next_frame, x, y, w, h), self.color_mode).astype(np.float64)
             _, _, num_channels = img_color_mode.shape
             if not success:
                 break
-            x, y, w, h = self.selected_region
             output = None
             all_F = []
             all_G = []
