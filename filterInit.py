@@ -146,8 +146,7 @@ def filterInit(img, channel):
         plt.show()
 
     if channel == GRAY_SCALE:
-        plt.imshow(np.fft.ifft2(H).real, cmap="gray")
-        plt.show()
+
         return H, A, B  # H: Filter A/B,
     else:
         return [[A_B/B_B, A_B, B_B], [A_G/B_G, A_G, B_G], [A_R/B_R, A_R, B_R]]
