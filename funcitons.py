@@ -8,13 +8,14 @@ from PIL import Image
 import math
 import pathlib
 
-def sp_noise(image,prob):
+
+def sp_noise(image, prob):
     '''
     Add salt and pepper noise to image
     prob: Probability of the noise
     '''
-    output = np.zeros(image.shape,np.uint8)
-    thres = 1 - prob 
+    output = np.zeros(image.shape, np.uint8)
+    thres = 1 - prob
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
             rdn = random.random()
@@ -63,11 +64,11 @@ def transform_images(number_of_images, img):
 
 
 def crop_image(img, x, y, width, height):
-    
-    x = max(x,0)
-    x = min(x,len(img[0]))
-    y = max(y,0)
-    y = min(y,len(img))
+
+    x = max(x, 0)
+    x = min(x, len(img[0]))
+    y = max(y, 0)
+    y = min(y, len(img))
     return img[y:y+height, x:x+width]
 
 
@@ -86,6 +87,8 @@ Should:
 -Skew images
 
 """
+
+
 def rnd(low, high):
     return random.uniform(low, high)
 
@@ -97,21 +100,20 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
     rows, cols = img.shape[:2]
     augmented_images_cropped = []
 
-
     grey_im = Image.fromarray(img).convert('L')
     grey_im = np.array(grey_im)
     max_iter = number_of_images // 6
     for i in range(max_iter):
         angle = -45 + i*(90//max_iter)
         rot_image = rotate_image(img, angle, origin)
-        img_cropped = crop_image(rot_image,x,y,w,h)
+        img_cropped = crop_image(rot_image, x, y, w, h)
 
-        #Salt and pepper
+        # Salt and pepper
 
-        sp = sp_noise(img_cropped,0.05)
+        sp = sp_noise(img_cropped, 0.05)
         augmented_images_cropped.append(sp)
 
-        #Flip
+        # Flip
         flipped_image_horizontal = cv2.flip(img_cropped, 1)
         flipped_image_vertical = cv2.flip(img_cropped, 0)
         augmented_images_cropped.append(flipped_image_horizontal)
@@ -131,7 +133,6 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
         sharpened_image = cv2.filter2D(img_cropped, -1, kernel)
         augmented_images_cropped.append(sharpened_image)
 
-
     return [img_cropped] + augmented_images_cropped
 
 
@@ -139,33 +140,37 @@ def get_selected_region_from_frame(frame):
     x, y, width, height = cv2.selectROI(frame)
     return (x, y, width, height)
 
+
 def get_detected_region_from_frame(frame):
-    cascade_path = pathlib.Path(cv2.__file__).parent.absolute() / "data/haarcascade_frontalface_default.xml"
+    cascade_path = pathlib.Path(cv2.__file__).parent.absolute(
+    ) / "data/haarcascade_frontalface_default.xml"
     clf = cv2.CascadeClassifier(str(cascade_path))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = clf.detectMultiScale(
         gray,
-        scaleFactor= 1.1,
-        minNeighbors= 5,
-        minSize= (30,30),
-        flags= cv2.CASCADE_SCALE_IMAGE
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30, 30),
+        flags=cv2.CASCADE_SCALE_IMAGE
     )
-    
-    if len(faces) >0:
-        x,y,w,h = faces[0]
+
+    if len(faces) > 0:
+        x, y, w, h = faces[0]
     else:
         return 1
     return (int(x), int(y), int(w), int(h))
+
 
 def preprocessing(img, width, height):
     log = np.log(img + 1)
     mean, std = np.mean(log), np.std(log)
     norm = (log - mean) / std
-    
+
     window_col = np.hanning(width)
     window_row = np.hanning(height)
     col_mask, row_mask = np.meshgrid(window_col, window_row)
     window = col_mask * row_mask
+
     img_norm = norm * window
-    
+
     return img_norm

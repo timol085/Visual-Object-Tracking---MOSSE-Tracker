@@ -22,6 +22,8 @@ GRAY_SCALE = 0
 RGB = 1
 HOG = 2
 RESNET = 3
+
+
 class MosseTracker:
     def __init__(self, chosen_channel=GRAY_SCALE):
         self.channel = chosen_channel
@@ -30,33 +32,32 @@ class MosseTracker:
         self.filter = None
         self.video = None
         self.selected_region = None
-        self.useDetection= None
+        self.useDetection = None
 
     def initialize(self, video_url, useDetection=False):
         self.video_url = video_url
         self.read_first_frame()
-        self.useDetection=useDetection
-        
-        #do eiter detection or let user select regions
-        if self.useDetection==False:
+        self.useDetection = useDetection
+
+        # do eiter detection or let user select regions
+        if self.useDetection == False:
             x, y, w, h = self.get_selected_region(self.first_frame, False)
-                
+
             self.selected_region = (x, y, w, h)
             augmented_images = self.augmented_images(
                 12, self.first_frame, (x, y, w, h))
             self.filter = self.create_filter(augmented_images)
         else:
-            returnvalue=self.get_selected_region(self.first_frame, True)
-            if returnvalue!=1:
-                x, y, w, h = returnvalue      
+            returnvalue = self.get_selected_region(self.first_frame, True)
+            if returnvalue != 1:
+                x, y, w, h = returnvalue
                 self.selected_region = (x, y, w, h)
                 augmented_images = self.augmented_images(
                     12, self.first_frame, (x, y, w, h))
                 self.filter = self.create_filter(augmented_images)
-            else: 
-                #if it cannot find anything to detect, it will ask the user
+            else:
+                # if it cannot find anything to detect, it will ask the user
                 self.initialize(video_url)
-                
 
     def read_first_frame(self):
         cap = cv2.VideoCapture(self.video_url)
@@ -65,16 +66,16 @@ class MosseTracker:
         return cap
 
     def get_selected_region(self, frame, useDetection=False):
-        if useDetection==False:
+        if useDetection == False:
             return get_selected_region_from_frame(frame)
         else:
             return get_detected_region_from_frame(frame)
-        
+
     def track(self):
         n_times_occluded = [0]
         cap = self.read_first_frame()
-        image_width= self.first_frame.shape[1]
-        image_height= self.first_frame.shape[0]
+        image_width = self.first_frame.shape[1]
+        image_height = self.first_frame.shape[0]
         print(image_width)
         print(image_height)
         success = True
@@ -92,49 +93,37 @@ class MosseTracker:
             x, y, w, h = self.selected_region
 
             if self.channel == GRAY_SCALE:
-                img_norm = preprocessing((cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h),cv2.COLOR_BGR2GRAY).astype(np.float64)), width=w, height=h)
+                img_gray = cv2.cvtColor(crop_image(
+                    next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY).astype(np.float64)
+
+                img_norm = preprocessing(img_gray, width=w, height=h)
                 F = np.fft.fft2(img_norm)
                 output = self.apply_filter(F)
                 # img = (cv2.cvtColor(crop_image(
                 #     next_frame, x, y, w, h), cv2.COLOR_BGR2GRAY))
                 # F = np.fft.fft2(img)
             else:
-                
-                # Uppdatera så att preprocessing används här också
-                log_B = np.log(cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,0].astype(np.float64)+1)
-                log_G = np.log(cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,1].astype(np.float64)+1)
-                log_R = np.log(cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h),cv2.COLOR_BGR2HSV)[:,:,2].astype(np.float64)+1)
+                # preprocessing fixat
+                img_B = cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2HSV)[
+                    :, :, 0].astype(np.float64)
+                img_G = cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2HSV)[
+                    :, :, 1].astype(np.float64)
+                img_R = cv2.cvtColor(crop_image(next_frame, x, y, w, h), cv2.COLOR_BGR2HSV)[
+                    :, :, 2].astype(np.float64)
 
-        
-                meanB, stdB = np.mean(log_B), np.std(log_B)
-                meanG, stdG = np.mean(log_G), np.std(log_G)
-                meanR, stdR = np.mean(log_R), np.std(log_R)
-                
-                norm_B = (log_B - meanB) / stdB
-                norm_G = (log_G - meanG) / stdG
-                norm_R = (log_R - meanR) / stdR
+                norm_B = preprocessing(img_B, width=w, height=h)
+                norm_G = preprocessing(img_G, width=w, height=h)
+                norm_R = preprocessing(img_R, width=w, height=h)
 
-                # Cosine window 
-                window_col = np.hanning(w)
-                window_row = np.hanning(h)
-                col_mask, row_mask = np.meshgrid(window_col, window_row)
-                window = col_mask * row_mask
-                norm_B = norm_B * window
-                norm_G = norm_G * window
-                norm_R = norm_R * window
-                
-                fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(norm_B,norm_G,norm_R)
-
+                fd, fd_B, fd_G, fd_R, imgB, imgG, imgR = hog_extraction(
+                    norm_B, norm_G, norm_R)
 
                 F_Bi = np.fft.fft2(imgB)
                 F_Gi = np.fft.fft2(imgG)
                 F_Ri = np.fft.fft2(imgR)
-    
-                output_B,output_G,output_R = self.apply_filter([F_Bi,F_Gi,F_Ri])
+
+                output_B, output_G, output_R = self.apply_filter(
+                    [F_Bi, F_Gi, F_Ri])
 
                 output = output_B + output_G + output_R
                 # plt.imshow(np.fft.ifft2(output).real)
@@ -145,10 +134,9 @@ class MosseTracker:
             result_img_org = np.fft.ifft2(output).real
 
             self.selected_region = (ux, uy, w, h)
-            
 
             # Display the image
-            im = ax.imshow(next_frame,cmap="brg", animated=True)
+            im = ax.imshow(next_frame, cmap="brg", animated=True)
 
             # Create a Rectangle patch
 
@@ -164,25 +152,24 @@ class MosseTracker:
             if self.channel == GRAY_SCALE:
                 self.update_filter(F, output)
             else:
-                self.update_filter_multi([F_Bi,F_Gi,F_Ri],[output_B,output_G,output_R])
+                self.update_filter_multi([F_Bi, F_Gi, F_Ri], [
+                                         output_B, output_G, output_R])
 
-            #print("Frame " + str(count) + " done")
-            count +=1
+            # print("Frame " + str(count) + " done")
+            count += 1
             success, next_frame = cap.read()
-        print("TIMES OCCLUDED",n_times_occluded, "/",count-1)
+        print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
         ani = animation.ArtistAnimation(
             fig, frames, interval=30, blit=True, repeat_delay=0)
 
-           
         plt.show()
 
-
     def apply_filter(self, frame):
-        
+
         if self.channel == GRAY_SCALE:
             return self.filter[0] * frame
         else:
-            return [self.filter[0][0]*frame[0],self.filter[1][0]*frame[1],self.filter[2][0]*frame[2]]
+            return [self.filter[0][0]*frame[0], self.filter[1][0]*frame[1], self.filter[2][0]*frame[2]]
 
     def augmented_images(sel, n_images, img, region):
         return get_augmented_images_cropped(n_images, img, region)
@@ -193,13 +180,12 @@ class MosseTracker:
     def update_filter(self, F, G):
         self.filter = updateFilter(self.filter[1], self.filter[2], F, G)
 
-    def update_filter_multi(self,F,G):
-        F_B,F_G,F_R = F
-        G_B,G_G,G_R = G
+    def update_filter_multi(self, F, G):
+        F_B, F_G, F_R = F
+        G_B, G_G, G_R = G
 
-        filter_B = updateFilter(self.filter[0][1],self.filter[0][2],F_B,G_B)
-        filter_G = updateFilter(self.filter[1][1],self.filter[1][2],F_G,G_G)
-        filter_R = updateFilter(self.filter[2][1],self.filter[2][2],F_R,G_R)
+        filter_B = updateFilter(self.filter[0][1], self.filter[0][2], F_B, G_B)
+        filter_G = updateFilter(self.filter[1][1], self.filter[1][2], F_G, G_G)
+        filter_R = updateFilter(self.filter[2][1], self.filter[2][2], F_R, G_R)
 
-        self.filter = [filter_B,filter_G,filter_R]
-
+        self.filter = [filter_B, filter_G, filter_R]
