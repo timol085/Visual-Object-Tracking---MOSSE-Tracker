@@ -6,7 +6,6 @@ from funcitons import crop_image
 
 
 def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
-
     eta_Gi = eta*Gi
     eta_Fi = eta*Fi
     Ai = np.multiply(eta_Gi, np.conj(Fi)) + (1 - eta) * Ai
@@ -16,10 +15,7 @@ def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
 
     return Hi, Ai, Bi
 
-
 def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,thr=10):
-
-
     peak, psr = get_peak_and_psr(np.fft.ifft2(img).real)
     print("PEAK", peak)
     print("psr", psr)

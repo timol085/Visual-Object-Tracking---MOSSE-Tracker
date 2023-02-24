@@ -1,16 +1,8 @@
 from mossetracker import MosseTracker
+import cv2
 
-global GRAY_SCALE
-global RGB
-global HOG
-global RESNET
-GRAY_SCALE = 0
-RGB = 1
-HOG = 2
-RESNET = 3
+tracker = MosseTracker(cv2_color=cv2.COLOR_BGR2HSV)
 
-tracker = MosseTracker(RGB)
-
-tracker.initialize("Bolt.mp4")
+tracker.initialize("./video_sequences/surfer.mp4")
 
 tracker.track()
