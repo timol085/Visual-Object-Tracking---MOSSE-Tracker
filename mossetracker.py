@@ -59,7 +59,6 @@ class MosseTracker:
                     self.selected_region = (x, y, w, h)
                     augmented_images = self.augmented_images(12, self.first_frame, (x, y, w, h))
                     self.filter = self.create_filter(augmented_images)
-
                 canRead,self.first_frame=cap.read()
 
             print("Cant find")
@@ -148,12 +147,11 @@ class MosseTracker:
             else: i_img_norm= img_color_mode[0,:,:,i]
             i_F = np.fft.fft2(i_img_norm)
             i_output = self.apply_filter(i_F, i)
-            b= np.isnan(i_output.all())
             if output is None:
                 output = i_output
-            elif b==False:
+            else:
                 output += i_output
-
+                print(output.shape)
 
             all_F.append(i_F)
             all_G.append(i_output)
