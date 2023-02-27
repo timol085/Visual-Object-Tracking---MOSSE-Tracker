@@ -5,7 +5,7 @@ from get_peak_and_psr import get_peak_and_psr
 from funcitons import crop_image
 
 
-def updateFilter(Ai, Bi, Fi, Gi,useResnet, eta=0.125):
+def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
     eta_Gi = eta*Gi
     eta_Fi = eta*Fi
     Ai = np.multiply(eta_Gi, np.conj(Fi)) + (1 - eta) * Ai

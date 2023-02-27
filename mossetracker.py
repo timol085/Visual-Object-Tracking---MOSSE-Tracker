@@ -92,6 +92,7 @@ class MosseTracker:
         frames = []
         fig, ax = plt.subplots()
         count = 1
+    
         while success:
             success, next_frame = cap.read()
             if not success:
@@ -101,6 +102,7 @@ class MosseTracker:
             if self.ResNet==False:
                 img_color_mode = cv2.cvtColor(crop_image(next_frame, x, y, w, h), self.color_mode).astype(np.float64)
                 _, _, num_channels = img_color_mode.shape
+                
             else:
                 img_color_mode= resNet(crop_image(next_frame, x, y, w, h), self.model)
                 _,_, _, num_channels = img_color_mode.shape
@@ -131,7 +133,7 @@ class MosseTracker:
         return get_augmented_images_cropped(n_images, img, region)
 
     def create_filter(self, array_of_images):
-        return filterInit(array_of_images, self.color_mode, self.ResNet, self.model)
+        return filterInit(array_of_images, self.color_mode, self.ResNet, self.HOG, self.model)
     
     def update_filter(self,F,G):
         filter_temp = []
@@ -144,6 +146,8 @@ class MosseTracker:
         for i in range(num_channels):
             if self.ResNet==False:
                 i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
+                if self.HOG == True:
+                    _, i_img_norm = hog_extraction(i_img_norm)
             else: i_img_norm= img_color_mode[0,:,:,i]
             i_F = np.fft.fft2(i_img_norm)
             i_output = self.apply_filter(i_F, i)
