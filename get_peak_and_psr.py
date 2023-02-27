@@ -1,8 +1,9 @@
+from matplotlib import pyplot as plt
 import numpy as np
 import cv2
 
 
-def get_peak_and_psr(img):
+def get_peak_and_psr(img, useResnet):
     # Calculate peak value
     img = (img - np.min(img))/(np.max(img)-np.min(img))
     gmax = np.max(img)
@@ -13,7 +14,10 @@ def get_peak_and_psr(img):
     peak_y = peak_index[1][0]
 
     # Extract a 11x11 window around the peak
-    window_size = 11
+    if useResnet== False:
+        window_size = 11
+    else: window_size=1
+    
     x_start = max(peak_x - window_size // 2, 0)
     x_end = min(peak_x + window_size // 2 + 1, img.shape[0])
     y_start = max(peak_y - window_size // 2, 0)
@@ -23,6 +27,9 @@ def get_peak_and_psr(img):
     sidelobe = img
     sidelobe[x_start:x_end, y_start:y_end] = 0
 
+    #plt.imshow(sidelobe)
+    #plt.show()
+    
     # Calculate mean and standard deviation of the sidelobe
     mean = np.mean(sidelobe)
     std = np.std(sidelobe)

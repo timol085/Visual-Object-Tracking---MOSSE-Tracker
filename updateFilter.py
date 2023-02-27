@@ -5,20 +5,28 @@ from get_peak_and_psr import get_peak_and_psr
 from funcitons import crop_image
 
 
-def updateFilter(Ai, Bi, Fi, Gi, eta=0.125):
+def updateFilter(Ai, Bi, Fi, Gi,useResnet, eta=0.125):
     eta_Gi = eta*Gi
     eta_Fi = eta*Fi
     Ai = np.multiply(eta_Gi, np.conj(Fi)) + (1 - eta) * Ai
-    Bi = np.multiply(eta_Fi, np.conj(Fi)) + (1 - eta) * Bi
+    Bi = 0.01+np.multiply(eta_Fi, np.conj(Fi)) + (1 - eta) * Bi
 
     Hi = Ai / Bi
 
     return Hi, Ai, Bi
 
-def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,thr=10):
-    peak, psr = get_peak_and_psr(np.fft.ifft2(img).real)
+
+def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,thr=10):
+    peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet)
     print("PEAK", peak)
     print("psr", psr)
+    
+    if useResnet ==True:
+        resnetSize=7
+        factorX= w_org / resnetSize
+        factorY= h_org/resnetSize
+        peak= (peak[0]*factorY, peak[1]*factorX)
+        
     # If PSR < 7 then the object may be occluded
     print(f"PSR - {psr}")
     if psr > thr:

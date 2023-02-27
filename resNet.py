@@ -12,17 +12,24 @@ from keras.utils import plot_model
 from keras.applications import ResNet50
 from keras.applications.resnet import preprocess_input
 
+def getModel():
+    model = ResNet50(weights = 'imagenet')
+    return model
+    
 
-def resNet(img):
+def resNet(img, model):
     orig = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     # Resize image to 224x224 size
     image = cv2.resize(orig, (224, 224)).reshape(-1, 224, 224, 3)
     # We need to preprocess imageto fulfill ResNet50 requirements
     image = preprocess_input(image)
-    model = ResNet50(weights = 'imagenet', include_top = False, classes=3)
-    features = model.predict(image)
+    #model = ResNet50(weights = 'imagenet', include_top = False, classes=3)
+    preds = model.predict(image)
+    label = tf.keras.applications.resnet.decode_predictions(preds, top=1)[0][0][1]
+
     
-    n_features = features.shape[-1]
+    
+    '''n_features = features.shape[-1]
 
     fig = plt.figure(figsize = (17, 8))
     gs = gridspec.GridSpec(1, 2, figure = fig)
@@ -36,8 +43,8 @@ def resNet(img):
             ax2 = fig.add_subplot(sub_gs[i, j])
             plt.axis('off')        
             plt.imshow(features[0, :, :, np.random.randint(n_features)], cmap = 'gray')
-    plt.show()
-    return features
+    plt.show()'''
+    return preds
 
 
 '''print(features.shape)
