@@ -16,7 +16,7 @@ import os
 def hog_extraction(norm_channel):
     # HOG feature extraction
     fd, hog_image = hog(norm_channel, orientations=8, pixels_per_cell=(16, 16), cells_per_block=(
-        2, 2), visualize=True, channel_axis=-1, multichannel=False, feature_vector=True)
+        1, 1), visualize=True, channel_axis=-1, multichannel=False, feature_vector=False)
     
 
     # Reshape to shape of cropped img

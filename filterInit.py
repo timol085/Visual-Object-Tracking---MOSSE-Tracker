@@ -9,13 +9,17 @@ def filterInit(img, color_mode, useResNet, useHOG, color, model):
 
     
     if useResNet==False:
-        height,width,num_channels = cv2.cvtColor(img[0], color_mode).astype(np.float64).shape
-        if color == True:
-            num_channels = 11
+        if len(cv2.cvtColor(img[0], color_mode).astype(np.float64).shape) == 2: 
+            num_channels = 1; 
+            height, width = cv2.cvtColor(img[0], color_mode).astype(np.float64).shape
+        else:
+            height, width, num_channels = cv2.cvtColor(img[0], color_mode).astype(np.float64).shape
     else:
         i_img_color_mode = resNet(img[0], model)
         _, height, width,num_channels= i_img_color_mode.shape
         
+    if color == True:
+        num_channels = 11
     sigma = 2 # 10 king
 
     # Create gaussian filter
@@ -41,13 +45,18 @@ def filterInit(img, color_mode, useResNet, useHOG, color, model):
         for i in range(num_channels):
             
             if useResNet == False:
-                img_channel_norm = preprocessing(i_img_color_mode[:,:,i], width, height)
+                if len(i_img_color_mode.shape) == 2:
+                    img_channel_norm = preprocessing(i_img_color_mode, width, height)
+                else:
+                    img_channel_norm = preprocessing(i_img_color_mode[:,:,i], width, height)
             else:
                 img_channel_norm= i_img_color_mode[0,:,:,i]
                 
-              # # HOG extraction - Use the feature vectors not the hog images
+              # HOG extraction - Use the feature vectors not the hog images
             if useHOG == True:
-                _, img_channel_norm = hog_extraction(img_channel_norm)
+                img_channel_norm, hog_img = hog_extraction(img_channel_norm)
+                img_channel_norm = np.squeeze(img_channel_norm)
+                print("fd: ", img_channel_norm.shape)
             
             
             F_i = np.fft.fft2(img_channel_norm)

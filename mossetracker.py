@@ -104,8 +104,10 @@ class MosseTracker:
                 img_color_mode = cv2.cvtColor(crop_image(next_frame, x, y, w, h), self.color_mode).astype(np.float64)
                 if self.color == True:
                     img_color_mode = color_extraction(img_color_mode, mode="probability")
-                    
-                _, _, num_channels = img_color_mode.shape
+                if len(img_color_mode.shape) == 2:
+                    num_channels = 1
+                else:
+                    _, _, num_channels = img_color_mode.shape
                 
             else:
                 img_color_mode= resNet(crop_image(next_frame, x, y, w, h), self.model)
@@ -144,12 +146,15 @@ class MosseTracker:
         for idx,(f,g) in enumerate(zip(F,G)):
             self.filter[idx] = updateFilter(self.filter[idx][1],self.filter[idx][2], f, g, self.ResNet)
             
-    def preprocess_and_calculate_filters(self,num_channels, img_color_mode, w, h, all_F, all_G):
-        output = None
+    def preprocess_and_calculate_filters(self, num_channels, img_color_mode, w, h, all_F, all_G):
+        output = None 
         
         for i in range(num_channels):
             if self.ResNet == False and self.color == False:
-                i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
+                if len(img_color_mode.shape) == 2:
+                    i_img_norm = preprocessing(img_color_mode, width=w, height=h)
+                else:
+                    i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
                 if self.HOG == True:
                     _, i_img_norm = hog_extraction(i_img_norm)
                
