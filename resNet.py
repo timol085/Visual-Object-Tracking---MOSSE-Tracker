@@ -13,7 +13,7 @@ from keras.applications import ResNet50
 from keras.applications.resnet import preprocess_input
 
 def getModel():
-    model = ResNet50(weights = 'imagenet')
+    model = ResNet50(weights = 'imagenet',include_top = False)
     return model
     
 
@@ -25,10 +25,7 @@ def resNet(img, model):
     image = preprocess_input(image)
     #model = ResNet50(weights = 'imagenet', include_top = False, classes=3)
     preds = model.predict(image)
-    label = tf.keras.applications.resnet.decode_predictions(preds, top=1)[0][0][1]
 
-    
-    
     '''n_features = features.shape[-1]
 
     fig = plt.figure(figsize = (17, 8))
