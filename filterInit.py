@@ -1,18 +1,20 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from feature_extraction import hog_extraction
+from feature_extraction import hog_extraction, color_extraction
 from funcitons import preprocessing
 from resNet import resNet
 
-def filterInit(img, color_mode, useResNet, useHOG, model):
-    
+def filterInit(img, color_mode, useResNet, useHOG, color, model):
+
     
     if useResNet==False:
         height,width,num_channels = cv2.cvtColor(img[0], color_mode).astype(np.float64).shape
+        if color == True:
+            num_channels = 11
     else:
         i_img_color_mode = resNet(img[0], model)
-        _,height, width,num_channels= i_img_color_mode.shape
+        _, height, width,num_channels= i_img_color_mode.shape
         
     sigma = 2 # 10 king
 
@@ -33,6 +35,8 @@ def filterInit(img, color_mode, useResNet, useHOG, model):
         else:
             i_img_color_mode = resNet(current_image, model)
         
+        if color == True:
+            i_img_color_mode = color_extraction(i_img_color_mode, mode="probability")
         
         for i in range(num_channels):
             
@@ -43,8 +47,8 @@ def filterInit(img, color_mode, useResNet, useHOG, model):
                 
               # # HOG extraction - Use the feature vectors not the hog images
             if useHOG == True:
-                print(img_channel_norm.shape)
                 _, img_channel_norm = hog_extraction(img_channel_norm)
+            
             
             F_i = np.fft.fft2(img_channel_norm)
             A = G * np.conjugate(F_i)
