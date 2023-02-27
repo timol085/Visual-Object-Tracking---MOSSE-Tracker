@@ -90,3 +90,57 @@ def filterInit(img, color_mode, useResNet, model):
     return H_A_B
 
 
+    B_B += F_Bi * np.conjugate(F_Bi)
+    B_G += F_Gi * np.conjugate(F_Gi)
+    B_R += F_Ri * np.conjugate(F_Ri)
+
+    if channel != GRAY_SCALE:
+        A = A_B + A_G + A_R
+        B = B_B + B_G + B_R
+
+    H = A/B
+
+    # Test original image
+    if channel == GRAY_SCALE:
+
+        img_org = np.fft.fft2(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY))
+
+        # log_img = np.log(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)+1)
+        # mean, std = np.mean(log_img), np.std(log_img)
+        # img_norm = (log_img - mean) / std
+        # img_org = np.fft.fft2(img_norm)
+
+        result_img_org = img_org * H
+        result_img_org = np.fft.ifft2(result_img_org).real
+
+        plt.imshow(result_img_org, cmap="gray")
+        plt.show()
+    else:
+        img_org_B = np.fft.fft2(cv2.cvtColor(
+            img[0], cv2.COLOR_BGR2HSV)[:, :, 0])
+        img_org_R = np.fft.fft2(cv2.cvtColor(
+            img[0], cv2.COLOR_BGR2HSV)[:, :, 1])
+        img_org_G = np.fft.fft2(cv2.cvtColor(
+            img[0], cv2.COLOR_BGR2HSV)[:, :, 2])
+
+        # log_img = np.log(cv2.cvtColor(img[0], cv2.COLOR_BGR2GRAY)+1)
+        # mean, std = np.mean(log_img), np.std(log_img)
+        # img_norm = (log_img - mean) / std
+        # img_org = np.fft.fft2(img_norm)
+
+        result_img_org_B = img_org_B * H
+        result_img_org_G = img_org_G * H
+        result_img_org_R = img_org_R * H
+        result_img_org_B = np.fft.ifft2(result_img_org_B).real
+        result_img_org_G = np.fft.ifft2(result_img_org_G).real
+        result_img_org_R = np.fft.ifft2(result_img_org_R).real
+        result_img_org = result_img_org_B + result_img_org_G + result_img_org_R
+
+        plt.imshow(result_img_org)
+        plt.show()
+
+    if channel == GRAY_SCALE:
+
+        return H, A, B  # H: Filter A/B,
+    else:
+        return [[A_B/B_B, A_B, B_B], [A_G/B_G, A_G, B_G], [A_R/B_R, A_R, B_R]]
