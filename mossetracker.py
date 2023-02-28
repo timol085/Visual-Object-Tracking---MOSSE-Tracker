@@ -9,8 +9,7 @@ from updateFilter import updateWindow, updateFilter
 import matplotlib.patches as patches
 import numpy as np
 from matplotlib import animation
-from resNet import resNet, getModel
-
+from features_resnet import DeepFeatureExtractor
 class MosseTracker:
     def __init__(self, cv2_color=cv2.COLOR_GRAY2BGR, hog=False, resnet=False):
         self.color_mode = cv2_color
@@ -22,7 +21,7 @@ class MosseTracker:
         self.useDetection = None
         self.HOG = hog
         self.ResNet = resnet
-        self.model = getModel()
+        self.model = DeepFeatureExtractor()
 
     def initialize(self, video_url, useDetection=False):
         self.video_url = video_url
@@ -104,8 +103,8 @@ class MosseTracker:
                 _, _, num_channels = img_color_mode.shape
                 
             else:
-                img_color_mode= resNet(crop_image(next_frame, x, y, w, h), self.model)
-                _,_, _, num_channels = img_color_mode.shape
+                img_color_mode= self.model(crop_image(next_frame, x, y, w, h))
+                _, _, num_channels = img_color_mode.shape
                 
             all_F = []
             all_G = []
@@ -148,14 +147,13 @@ class MosseTracker:
                 i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
                 if self.HOG == True:
                     _, i_img_norm = hog_extraction(i_img_norm)
-            else: i_img_norm= img_color_mode[0,:,:,i]
+            else: i_img_norm= img_color_mode[:,:,i]
             i_F = np.fft.fft2(i_img_norm)
             i_output = self.apply_filter(i_F, i)
             if output is None:
                 output = i_output
             else:
                 output += i_output
-                print(output.shape)
 
             all_F.append(i_F)
             all_G.append(i_output)

@@ -7,12 +7,11 @@ from resNet import resNet
 
 def filterInit(img, color_mode, useResNet, useHOG, model):
     
-    
     if useResNet==False:
         height,width,num_channels = cv2.cvtColor(img[0], color_mode).astype(np.float64).shape
     else:
-        i_img_color_mode = resNet(img[0], model)
-        _,height, width,num_channels= i_img_color_mode.shape
+        i_img_color_mode = model(img[0])
+        height, width,num_channels= i_img_color_mode.shape
         
     sigma = 2 # 10 king
 
@@ -31,7 +30,7 @@ def filterInit(img, color_mode, useResNet, useHOG, model):
         if useResNet==False:
             i_img_color_mode = cv2.cvtColor(current_image, color_mode).astype(np.float64)
         else:
-            i_img_color_mode = resNet(current_image, model)
+            i_img_color_mode = model(current_image)
         
         
         for i in range(num_channels):
@@ -39,7 +38,7 @@ def filterInit(img, color_mode, useResNet, useHOG, model):
             if useResNet == False:
                 img_channel_norm = preprocessing(i_img_color_mode[:,:,i], width, height)
             else:
-                img_channel_norm= i_img_color_mode[0,:,:,i]
+                img_channel_norm= i_img_color_mode[:,:,i]
                 
               # # HOG extraction - Use the feature vectors not the hog images
             if useHOG == True:
