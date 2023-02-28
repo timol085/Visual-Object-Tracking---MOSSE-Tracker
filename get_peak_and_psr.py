@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 
-def get_peak_and_psr(img, useResnet):
+def get_peak_and_psr(img, useResnet,useHOG):
     # Calculate peak value
     img = (img - np.min(img))/(np.max(img)-np.min(img))
     gmax = np.max(img)
@@ -14,9 +14,9 @@ def get_peak_and_psr(img, useResnet):
     peak_y = peak_index[1][0]
 
     # Extract a 11x11 window around the peak
-    if useResnet== False:
-        window_size = 11
-    else: window_size=1
+    if useResnet or useHOG:
+        window_size = 5
+    else: window_size=11
     
     x_start = max(peak_x - window_size // 2, 0)
     x_end = min(peak_x + window_size // 2 + 1, img.shape[0])
