@@ -16,7 +16,7 @@ def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
     return Hi, Ai, Bi
 
 
-def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,thr=10):
+def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,thr=7):
     peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet)
     
     if useResnet ==True:

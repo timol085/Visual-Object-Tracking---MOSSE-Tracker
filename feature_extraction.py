@@ -3,14 +3,20 @@ import cv2
 from skimage.feature import hog
 from skimage import exposure
 from matplotlib import pyplot as plt
+import scipy.io
+import os
+
+
+
+
 
 # Feature extraction for color and edge features
 
 
 def hog_extraction(norm_channel):
     # HOG feature extraction
-    fd, hog_image = hog(norm_channel, orientations=8, pixels_per_cell=(8, 8), cells_per_block=(
-        1, 1), visualize=True, channel_axis=-1, multichannel=False, feature_vector=True)
+    fd, hog_image = hog(norm_channel, orientations=8, pixels_per_cell=(16, 16), cells_per_block=(
+        1, 1), visualize=True, channel_axis=-1, multichannel=False, feature_vector=False)
     
 
     # Reshape to shape of cropped img
@@ -33,3 +39,25 @@ def hog_extraction(norm_channel):
     # plt.show()
 
     return fd, hog_image
+
+# Got from Gitlab Liu TSBB34 repo
+COLOR_NAMES = ['black', 'blue', 'brown', 'grey', 'green', 'orange',
+               'pink', 'purple', 'red', 'white', 'yellow']
+COLOR_RGB = [[0, 0, 0] , [0, 0, 1], [.5, .4, .25] , [.5, .5, .5] , [0, 1, 0] , [1, .8, 0] ,
+             [1, .5, 1] ,[1, 0, 1], [1, 0, 0], [1, 1, 1 ] , [ 1, 1, 0 ]]
+
+COLORNAMES_TABLE_PATH = os.path.join(os.path.dirname(__file__), 'colornames_w2c.mat')
+COLORNAMES_TABLE = scipy.io.loadmat(COLORNAMES_TABLE_PATH)['w2c']
+
+def color_extraction(image, mode="index"): 
+        image = image.astype('double')
+        idx = np.floor(image[..., 0] / 8) + 32 * np.floor(image[..., 1] / 8) + 32 * 32 * np.floor(image[..., 2] / 8)
+        m = COLORNAMES_TABLE[idx.astype('int')]
+
+        if mode == 'index':
+            return np.argmax(m, 2)
+        elif mode == 'probability':
+            return m
+        else:
+            raise ValueError("No such mode: '{}'".format(mode))
+
