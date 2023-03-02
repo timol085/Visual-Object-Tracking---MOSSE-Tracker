@@ -16,32 +16,35 @@ def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
     return Hi, Ai, Bi
 
 
-def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,useHOG, width_hog,height_hog,thr=7):
-    peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet,useHOG)
+def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded, useResnet, useHOG, width_hog, height_hog, thr=7):
+    peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet, useHOG)
     print("PEAK", peak)
-    print("psr", psr)
-    
-    if useResnet ==True:
-        resnetSize=7
-        factorX= w_org / resnetSize
-        factorY= h_org/resnetSize
-        peak= (peak[0]*factorY, peak[1]*factorX)
+    # print("psr", psr)
+
+    if useResnet == True:
+        resnetSize = 7
+        factorX = 224 / resnetSize
+        factorY = 224 / resnetSize
+
+        factorX *= w_org/factorX
+        factorY *= h_org/factorY
+        #peak = (peak[0]*factorY, peak[1]*factorX)
 
     if useHOG == True:
-        factorX= w_org / width_hog
-        factorY= h_org/height_hog
-        peak= (peak[0]*factorY, peak[1]*factorX)
-        
+        factorX = w_org / width_hog
+        factorY = h_org / height_hog
+        peak = (peak[0]*factorY, peak[1]*factorX)
+
     # If PSR < 7 then the object may be occluded
     print(f"PSR - {psr}")
     if psr > thr:
-    
-        dx = peak[1] - (w_org / 2)
-        dy = peak[0] - (h_org / 2)
+
+        dx = (peak[1] - (w_org / 2))*factorX
+        dy = (peak[0] - (h_org / 2))*factorY
     else:
-        dx = peak[1] - (w_org / 2)
-        dy = peak[0] - (h_org / 2)
-        
+        dx = (peak[1] - (w_org / 2))*factorX
+        dy = (peak[0] - (h_org / 2))*factorY
+
         n_times_occluded[0] += 1
 
     return int(x_org + dx), int(y_org + dy)

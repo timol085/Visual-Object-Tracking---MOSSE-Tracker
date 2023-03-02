@@ -3,9 +3,11 @@ import numpy as np
 import cv2
 
 
-def get_peak_and_psr(img, useResnet,useHOG):
+def get_peak_and_psr(img, useResnet, useHOG):
     # Calculate peak value
     img = (img - np.min(img))/(np.max(img)-np.min(img))
+    # plt.imshow(img)
+    # plt.show()
     gmax = np.max(img)
 
     # Get indices of peak value
@@ -14,10 +16,11 @@ def get_peak_and_psr(img, useResnet,useHOG):
     peak_y = peak_index[1][0]
 
     # Extract a 11x11 window around the peak
-    if useResnet or useHOG:
+    if useResnet:
         window_size = 5
-    else: window_size=11
-    
+    else:
+        window_size = 11
+
     x_start = max(peak_x - window_size // 2, 0)
     x_end = min(peak_x + window_size // 2 + 1, img.shape[0])
     y_start = max(peak_y - window_size // 2, 0)
@@ -27,9 +30,9 @@ def get_peak_and_psr(img, useResnet,useHOG):
     sidelobe = img
     sidelobe[x_start:x_end, y_start:y_end] = 0
 
-    #plt.imshow(sidelobe)
-    #plt.show()
-    
+    # plt.imshow(sidelobe)
+    # plt.show()
+
     # Calculate mean and standard deviation of the sidelobe
     mean = np.mean(sidelobe)
     std = np.std(sidelobe)

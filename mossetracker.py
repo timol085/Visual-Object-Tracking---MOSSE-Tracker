@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib import animation
 from resNet import resNet, getModel
 
+
 class MosseTracker:
     def __init__(self, cv2_color=cv2.COLOR_GRAY2BGR, hog=False, resnet=False, color=False):
         self.color_mode = cv2_color
@@ -34,36 +35,38 @@ class MosseTracker:
             self.initialize_with_region()
         else:
             self.initialize_with_detection()
-            
+
     def initialize_with_region(self):
         x, y, w, h = self.get_selected_region(self.first_frame, False)
         self.selected_region = (x, y, w, h)
-        augmented_images = self.augmented_images(12, self.first_frame, (x, y, w, h))
+        augmented_images = self.augmented_images(
+            12, self.first_frame, (x, y, w, h))
         self.filter = self.create_filter(augmented_images)
-        
+
     def initialize_with_detection(self):
         returnvalue = self.get_selected_region(self.first_frame, True)
         if returnvalue != 1:
             x, y, w, h = returnvalue
             self.selected_region = (x, y, w, h)
-            augmented_images = self.augmented_images(12, self.first_frame, (x, y, w, h))
+            augmented_images = self.augmented_images(
+                12, self.first_frame, (x, y, w, h))
             self.filter = self.create_filter(augmented_images)
         else:
             # if it cannot find anything to detect, it will take next frame and try again
-            cap=self.read_first_frame()   
-            canRead,self.first_frame=cap.read()
+            cap = self.read_first_frame()
+            canRead, self.first_frame = cap.read()
             while canRead:
                 ret = self.get_selected_region(self.first_frame, True)
-                if ret !=1: 
-                    canRead=False 
+                if ret != 1:
+                    canRead = False
                     x, y, w, h = ret
                     self.selected_region = (x, y, w, h)
-                    augmented_images = self.augmented_images(12, self.first_frame, (x, y, w, h))
+                    augmented_images = self.augmented_images(
+                        12, self.first_frame, (x, y, w, h))
                     self.filter = self.create_filter(augmented_images)
-                canRead,self.first_frame=cap.read()
+                canRead, self.first_frame = cap.read()
 
             print("Cant find")
-        
 
     def read_first_frame(self):
         cap = cv2.VideoCapture(self.video_url)
@@ -85,51 +88,66 @@ class MosseTracker:
 
         success = True
         peak = []
-        
-        if self.selected_region!= None:
+
+        if self.selected_region != None:
             ox, oy, ow, oh = self.selected_region
         else:
-            success=False
+            success = False
         frames = []
         fig, ax = plt.subplots()
         count = 1
-        
+
         while success:
             success, next_frame = cap.read()
             if not success:
                 break
             x, y, w, h = self.selected_region
-            
-            if self.ResNet==False:
-                img_color_mode = cv2.cvtColor(crop_image(next_frame, x, y, w, h), self.color_mode).astype(np.float64)
+
+            if self.ResNet == False:
+                img_color_mode = cv2.cvtColor(crop_image(
+                    next_frame, x, y, w, h), self.color_mode).astype(np.float64)
                 if self.color == True:
-                    img_color_mode = color_extraction(img_color_mode, mode="probability")
+                    img_color_mode = color_extraction(
+                        img_color_mode, mode="probability")
                 # ------------- For HOG multichannel --------------------#
                 if self.HOG == True:
-                    img_color_mode,_ = hog_extraction(img_color_mode)
+                    _, _, num_channels = img_color_mode.shape
+                    for i in range(num_channels):
+                        img_color_mode[:, :, i] = preprocessing(
+                            img_color_mode[:, :, i], w, h)
+                    hog_image_pre = cv2.resize(
+                        img_color_mode, (w - w % 8, h-h % 8))
+                    img_color_mode, _ = hog_extraction(hog_image_pre)
                     img_color_mode = np.squeeze(img_color_mode)
-                #---------
+                    # img_color_mode = cv2.resize(
+                    #     img_color_mode, (w, h))
+                    _, _, hog_channels = img_color_mode.shape
+
+                # ---------
                 if len(img_color_mode.shape) == 2:
                     num_channels = 1
                 else:
                     _, _, num_channels = img_color_mode.shape
-                
+
             else:
-                img_color_mode= resNet(crop_image(next_frame, x, y, w, h), self.model)
-                _,_, _, num_channels = img_color_mode.shape
-                
+                img_color_mode = resNet(crop_image(
+                    next_frame, x, y, w, h), self.model)
+                _, _, _, num_channels = img_color_mode.shape
+
             all_F = []
             all_G = []
-            output=self.preprocess_and_calculate_filters(num_channels, img_color_mode, w, h, all_F, all_G)
-            #For hog
-            height_hog, width_hog = all_G[0].shape    
+            output = self.preprocess_and_calculate_filters(
+                hog_channels if self.HOG == True else num_channels, img_color_mode, w, h, all_F, all_G)
+            # For hog
+            height_hog, width_hog = all_G[0].shape
 
-            ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,width_hog,height_hog )
+            ux, uy = updateWindow(
+                x, y, w, h, output, n_times_occluded, self.ResNet, self.HOG, width_hog, height_hog)
             self.selected_region = (ux, uy, w, h)
             # Display the image
             im = ax.imshow(next_frame, cmap="brg", animated=True)
-            self.draw_rectangle(ux,uy,w,h, ox,oy, ow, oh, ax, frames, im)
-            self.update_filter(all_F,all_G)
+            self.draw_rectangle(ux, uy, w, h, ox, oy, ow, oh, ax, frames, im)
+            self.update_filter(all_F, all_G)
             count += 1
             success, next_frame = cap.read()
         print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
@@ -143,39 +161,41 @@ class MosseTracker:
         print("self.filter shape", len(self.filter))
         return self.filter[channel_idx][0] * frame
 
-        
-        
     def augmented_images(sel, n_images, img, region):
         return get_augmented_images_cropped(n_images, img, region)
 
     def create_filter(self, array_of_images):
         return filterInit(array_of_images, self.color_mode, self.ResNet, self.HOG, self.color, self.model)
-    
-    def update_filter(self,F,G):
+
+    def update_filter(self, F, G):
         filter_temp = []
-        for idx,(f,g) in enumerate(zip(F,G)):
-            self.filter[idx] = updateFilter(self.filter[idx][1],self.filter[idx][2], f, g, self.ResNet)
-            
+        for idx, (f, g) in enumerate(zip(F, G)):
+            self.filter[idx] = updateFilter(
+                self.filter[idx][1], self.filter[idx][2], f, g, self.ResNet)
+
     def preprocess_and_calculate_filters(self, num_channels, img_color_mode, w, h, all_F, all_G):
-        output = None 
-        
+        output = None
+
         for i in range(num_channels):
             if self.ResNet == False and self.color == False:
-                #------------For HOG multichannel ----------------#
+                # ------------For HOG multichannel ----------------#
                 if self.HOG == True:
-                    i_img_norm = img_color_mode[:,:,i]
-                # ----
-                else:    
-                    if len(img_color_mode.shape) == 2:
-                        i_img_norm = preprocessing(img_color_mode, width=w, height=h)
-                    else:
-                        i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
-            elif self.ResNet==True: 
-                i_img_norm= img_color_mode[0,:,:,i]
-            else:
-                i_img_norm = img_color_mode[:,:,i]
 
-            #----------------For HOG in all seperate RGB channels------------------------#
+                    i_img_norm = img_color_mode[:, :, i]
+                # ----
+                else:
+                    if len(img_color_mode.shape) == 2:
+                        i_img_norm = preprocessing(
+                            img_color_mode, width=w, height=h)
+                    else:
+                        i_img_norm = preprocessing(
+                            img_color_mode[:, :, i], width=w, height=h)
+            elif self.ResNet == True:
+                i_img_norm = img_color_mode[0, :, :, i]
+            else:
+                i_img_norm = img_color_mode[:, :, i]
+
+            # ----------------For HOG in all seperate RGB channels------------------------#
             # if self.HOG == True:
             #     i_img_norm_hog, _ = hog_extraction(i_img_norm)
             #     i_img_norm_hog = np.squeeze(i_img_norm_hog)
@@ -192,7 +212,7 @@ class MosseTracker:
 
             #         all_F.append(i_F)
             #         all_G.append(i_output)
-           
+
             # else:
             # ----
 
@@ -207,8 +227,8 @@ class MosseTracker:
             all_F.append(i_F)
             all_G.append(i_output)
         return output
-            
-    def draw_rectangle(self,ux,uy,w,h, ox,oy, ow, oh, ax, frames, im):
+
+    def draw_rectangle(self, ux, uy, w, h, ox, oy, ow, oh, ax, frames, im):
         # Create a Rectangle patch
         rect = patches.Rectangle(
             (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
