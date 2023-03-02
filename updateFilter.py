@@ -18,25 +18,26 @@ def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
 
 def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,thr=10):
     peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet)
-    print("PEAK", peak)
-    print("psr", psr)
     
     if useResnet ==True:
-        resnetSize=7
-        factorX= w_org / resnetSize
-        factorY= h_org/resnetSize
-        peak= (peak[0]*factorY, peak[1]*factorX)
-        
-    # If PSR < 7 then the object may be occluded
-    print(f"PSR - {psr}")
-    if psr > thr:
-    
-        dx = peak[1] - (w_org / 2)
-        dy = peak[0] - (h_org / 2)
+        factorX= w_org/img.shape[1]
+        factorY= h_org/img.shape[0]
+        if psr > thr:
+            dx = peak[1] - (img.shape[1] / 2)*factorX
+            dy = peak[0] - (img.shape[0] / 2)*factorY
+        else:
+            dx = (peak[1] - (img.shape[1] / 2))*factorX
+            dy = (peak[0] - (img.shape[0] / 2))*factorY
     else:
-        dx = peak[1] - (w_org / 2)
-        dy = peak[0] - (h_org / 2)
+        # If PSR < 7 then the object may be occluded
+        if psr > thr:
+    
+            dx = peak[1] - (w_org / 2)
+            dy = peak[0] - (h_org / 2)
+        else:
+            dx = peak[1] - (w_org / 2)
+            dy = peak[0] - (h_org / 2)
+                    
+            n_times_occluded[0] += 1        
         
-        n_times_occluded[0] += 1
-
     return int(x_org + dx), int(y_org + dy)
