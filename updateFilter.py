@@ -23,7 +23,7 @@ def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet,use
     
     if useResnet ==True:
         resnetSize=7
-        factorX= w_org / resnetSize
+        factorX= w_org/resnetSize
         factorY= h_org/resnetSize
         peak= (peak[0]*factorY, peak[1]*factorX)
 

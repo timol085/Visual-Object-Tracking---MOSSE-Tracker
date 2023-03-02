@@ -166,11 +166,11 @@ def preprocessing(img, width, height):
     mean, std = np.mean(log), np.std(log)
     norm = (log - mean) / std
 
-    window_col = np.hanning(width)
-    window_row = np.hanning(height)
-    col_mask, row_mask = np.meshgrid(window_col, window_row)
-    window = col_mask * row_mask
+    # window_col = np.hanning(width)
+    # window_row = np.hanning(height)
+    # col_mask, row_mask = np.meshgrid(window_col, window_row)
+    # window = col_mask * row_mask
 
-    img_norm = norm * window
+    img_norm = norm #* window
 
     return img_norm

@@ -15,7 +15,7 @@ import os
 
 def hog_extraction(norm_channel):
     # HOG feature extraction
-    fd, hog_image = hog(norm_channel, orientations=8, pixels_per_cell=(16, 16), cells_per_block=(
+    fd, hog_image = hog(norm_channel, orientations=8, pixels_per_cell=(4, 4), cells_per_block=(
         1, 1), visualize=True, channel_axis=-1, multichannel=True, feature_vector=False)
     
 
