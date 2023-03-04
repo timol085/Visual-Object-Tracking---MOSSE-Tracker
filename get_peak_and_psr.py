@@ -15,7 +15,7 @@ def get_peak_and_psr(img, useResnet,useHOG):
 
     # Extract a 11x11 window around the peak
     if useResnet or useHOG:
-        window_size = 5
+        window_size = 1
     else: window_size=11
     
     x_start = max(peak_x - window_size // 2, 0)
