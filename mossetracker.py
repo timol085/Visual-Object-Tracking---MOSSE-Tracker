@@ -107,8 +107,16 @@ class MosseTracker:
                 img_color_mode = cv2.cvtColor(crop_image(
                     next_frame, x, y, w, h), self.color_mode).astype(np.float64)
                 if self.color == True:
-                    img_color_mode = color_extraction(
-                        img_color_mode, mode="probability")
+                    img_color_mode = color_extraction(img_color_mode, mode="probability")
+                if self.HOG == True:
+
+                    rgb_channels = 3
+                    for i in range(rgb_channels):
+                        img_color_mode[:, :, i] = preprocessing(img_color_mode[:, :, i], w, h)  
+
+                    img_color_mode = cv2.resize(img_color_mode,(64,128))
+                    img_color_mode, _ = hog_extraction(img_color_mode)
+                    img_color_mode = np.squeeze(img_color_mode)
                 if len(img_color_mode.shape) == 2:
                     num_channels = 1
                 else:
@@ -120,10 +128,11 @@ class MosseTracker:
 
             all_F = []
             all_G = []
-            output = self.preprocess_and_calculate_filters(
-                num_channels, img_color_mode, w, h, all_F, all_G)
-            ux, uy = updateWindow(x, y, w, h, output,
-                                  n_times_occluded, self.ResNet)
+            output=self.preprocess_and_calculate_filters(num_channels, img_color_mode, w, h, all_F, all_G)
+            #For hog
+            height_hog, width_hog = all_G[0].shape    
+
+            ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,width_hog,height_hog )
             self.selected_region = (ux, uy, w, h)
             # Display the image
             im = ax.imshow(next_frame, cmap="brg", animated=True)
@@ -157,16 +166,18 @@ class MosseTracker:
 
         for i in range(num_channels):
             if self.ResNet == False and self.color == False:
-                if len(img_color_mode.shape) == 2:
-                    i_img_norm = preprocessing(
-                        img_color_mode, width=w, height=h)
-                else:
-                    i_img_norm = preprocessing(
-                        img_color_mode[:, :, i], width=w, height=h)
                 if self.HOG == True:
-                    _, i_img_norm = hog_extraction(i_img_norm)
+                    i_img_norm = img_color_mode[:,:,i]
+                else:    
+                    if len(img_color_mode.shape) == 2:
+                        i_img_norm = preprocessing(img_color_mode, width=w, height=h)
+                    else:
+                        i_img_norm = preprocessing(img_color_mode[:, :, i], width=w, height=h)
+            elif self.ResNet==True: 
+                i_img_norm= img_color_mode[:,:,i]
             else:
-                i_img_norm = img_color_mode[:, :, i]
+                i_img_norm = img_color_mode[:,:,i]
+
             i_F = np.fft.fft2(i_img_norm)
             i_output = self.apply_filter(i_F, i)
             if output is None:
