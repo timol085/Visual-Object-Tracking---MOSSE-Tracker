@@ -19,7 +19,7 @@ def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
 def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet, useHOG, width_hog, height_hog,thr=7):
     peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet,useHOG)
     
-    if useResnet ==True:
+    if useResnet ==True or useHOG==True:
         factorX= w_org/img.shape[1]
         factorY= h_org/img.shape[0]
         if psr > thr:
@@ -30,10 +30,6 @@ def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet, us
             dy = (peak[0] - (img.shape[0] / 2))*factorY
     else:
 
-        if useHOG == True:
-            factorX= w_org / width_hog
-            factorY= h_org/height_hog
-            peak= (peak[0]*factorY, peak[1]*factorX)
         # If PSR < 7 then the object may be occluded
         if psr > thr:
     
