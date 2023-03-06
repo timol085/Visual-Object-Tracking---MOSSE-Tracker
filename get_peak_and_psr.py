@@ -5,7 +5,7 @@ import cv2
 
 def get_peak_and_psr(img, useResnet,useHOG):
     # Calculate peak value
-    img = (img - np.min(img))/(np.max(img)-np.min(img))
+    img = (img - np.min(img))/(np.max(img)-np.min(img)+0.01)
     gmax = np.max(img)
 
     # Get indices of peak value
@@ -15,7 +15,7 @@ def get_peak_and_psr(img, useResnet,useHOG):
 
     # Extract a 11x11 window around the peak
     if useResnet or useHOG:
-        window_size = 1
+        window_size = 2
     else: window_size=11
     
     x_start = max(peak_x - window_size // 2, 0)

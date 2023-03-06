@@ -22,6 +22,7 @@ class MosseTracker:
         self.selected_region = None
         self.useDetection = None
         self.HOG = hog
+        self.cap=None
         self.ResNet = resnet
         self.model = DeepFeatureExtractor()
         self.color = color
@@ -39,6 +40,7 @@ class MosseTracker:
     def initialize_with_region(self):
         x, y, w, h = self.get_selected_region(self.first_frame, False)
         self.selected_region = (x, y, w, h)
+        
         augmented_images = self.augmented_images(
             12, self.first_frame, (x, y, w, h))
         self.filter = self.create_filter(augmented_images)
@@ -53,8 +55,8 @@ class MosseTracker:
             self.filter = self.create_filter(augmented_images)
         else:
             # if it cannot find anything to detect, it will take next frame and try again
-            cap = self.read_first_frame()
-            canRead, self.first_frame = cap.read()
+            self.read_first_frame()
+            canRead, self.first_frame = self.cap.read()
             while canRead:
                 ret = self.get_selected_region(self.first_frame, True)
                 if ret != 1:
@@ -64,15 +66,14 @@ class MosseTracker:
                     augmented_images = self.augmented_images(
                         12, self.first_frame, (x, y, w, h))
                     self.filter = self.create_filter(augmented_images)
-                canRead, self.first_frame = cap.read()
+                canRead, self.first_frame = self.cap.read()
 
             print("Cant find")
 
     def read_first_frame(self):
-        cap = cv2.VideoCapture(self.video_url)
-        ret, frame = cap.read()
+        self.cap = cv2.VideoCapture(self.video_url)
+        ret, frame = self.cap.read()
         self.first_frame = frame
-        return cap
 
     def get_selected_region(self, frame, useDetection=False):
         if useDetection == False:
@@ -80,14 +81,11 @@ class MosseTracker:
         else:
             return get_detected_region_from_frame(frame)
 
-    def track(self):
+    def track(self, chooseNew):
         n_times_occluded = [0]
-        cap = self.read_first_frame()
-        image_width = self.first_frame.shape[1]
-        image_height = self.first_frame.shape[0]
-
+        #self.read_first_frame()
+        Counter_psr_off =0
         success = True
-        peak = []
 
         if self.selected_region != None:
             ox, oy, ow, oh = self.selected_region
@@ -98,53 +96,91 @@ class MosseTracker:
         count = 1
 
         while success:
-            success, next_frame = cap.read()
+            success, next_frame = self.cap.read()
             if not success:
                 break
             x, y, w, h = self.selected_region
 
-            if self.ResNet == False:
-                img_color_mode = cv2.cvtColor(crop_image(
-                    next_frame, x, y, w, h), self.color_mode).astype(np.float64)
-                if self.color == True:
-                    img_color_mode = color_extraction(img_color_mode, mode="probability")
-                if self.HOG == True:
 
-                    rgb_channels = 3
-                    for i in range(rgb_channels):
-                        img_color_mode[:, :, i] = preprocessing(img_color_mode[:, :, i], w, h)  
-
-                    img_color_mode = cv2.resize(img_color_mode,(64,128))
-                    img_color_mode, _ = hog_extraction(img_color_mode)
-                    img_color_mode = np.squeeze(img_color_mode)
-                if len(img_color_mode.shape) == 2:
-                    num_channels = 1
-                else:
-                    _, _, num_channels = img_color_mode.shape
-
+            output,all_F, all_G= self.calculate_output(next_frame, x,y,w,h)
+            try: 
+                int(output)
+                IsOkPSR=False
+                Counter_psr_off=5
+            except TypeError:
+                IsOkPSR, ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,self.color )
+            
+            if chooseNew==True and (IsOkPSR == False or ux < -w/2):
+                print(ux)
+                #lägga på counter och kolla om den blivit typ 3 isfall vill vi köra om
+                Counter_psr_off +=1
+                if Counter_psr_off >4:
+                    
+                    Counter_psr_off=0
+                    self.lostTrack(next_frame)
+                    im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
+                    self.draw_cross(x, y, w, h,  ax, frames, im)                 
             else:
-                img_color_mode = self.model(crop_image(next_frame, x, y, w, h))
-                _, _, num_channels = img_color_mode.shape
-
-            all_F = []
-            all_G = []
-            output=self.preprocess_and_calculate_filters(num_channels, img_color_mode, w, h, all_F, all_G)
-            #For hog
-            height_hog, width_hog = all_G[0].shape    
-
-            ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,width_hog,height_hog )
-            self.selected_region = (ux, uy, w, h)
-            # Display the image
-            im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
-            self.draw_rectangle(ux, uy, w, h, ox, oy, ow, oh, ax, frames, im)
-            self.update_filter(all_F, all_G)
-            count += 1
-            success, next_frame = cap.read()
+                self.selected_region = (ux, uy, w, h)
+                # Display the image
+                im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
+                self.draw_rectangle(ux, uy, w, h,  ax, frames, im)
+                self.update_filter(all_F, all_G)
+                count += 1
+        success, next_frame = self.cap.read()
         print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
         ani = animation.ArtistAnimation(
-            fig, frames, interval=30, blit=True, repeat_delay=0)
-
+            fig, frames, interval=10, blit=True, repeat_delay=0)
         plt.show()
+        
+        ani.save('myanimation.mp4') 
+
+    def lostTrack(self, frame):
+        if self.useDetection==True:
+            returnvalue = self.get_selected_region(frame, True)
+            if returnvalue != 1:
+                x, y, w, h = returnvalue
+                self.selected_region = (x, y, w, h)
+                augmented_images = self.augmented_images(
+                    12, frame, (x, y, w, h))
+                self.filter = self.create_filter(augmented_images)
+        else:
+            x, y, w, h = self.get_selected_region(frame, False)
+            self.selected_region = (x, y, w, h)
+            augmented_images = self.augmented_images(
+                12, self.first_frame, (x, y, w, h))
+            self.filter = self.create_filter(augmented_images)
+            
+            
+    def calculate_output(self, next_frame, x,y,w,h):
+        if self.ResNet == False:
+            img_color_mode = cv2.cvtColor(crop_image(
+                next_frame, x, y, w, h), self.color_mode).astype(np.float64)
+            if self.color == True:
+                img_color_mode = color_extraction(img_color_mode, mode="probability")
+            if self.HOG == True:
+
+                rgb_channels = 3
+                for i in range(rgb_channels):
+                    img_color_mode[:, :, i] = preprocessing(img_color_mode[:, :, i], w, h)  
+
+                img_color_mode = cv2.resize(img_color_mode,(64,128))
+                img_color_mode, _ = hog_extraction(img_color_mode)
+                img_color_mode = np.squeeze(img_color_mode)
+            if len(img_color_mode.shape) == 2:
+                num_channels = 1
+            else:
+                _, _, num_channels = img_color_mode.shape
+
+        else:
+            img_color_mode = self.model(crop_image(next_frame, x, y, w, h))
+            _, _, num_channels = img_color_mode.shape
+
+        all_F = []
+        all_G = []
+        output=self.preprocess_and_calculate_filters(num_channels, img_color_mode, w, h, all_F, all_G)
+        return output, all_F, all_G
+        
 
     def apply_filter(self, frame, channel_idx):
         return self.filter[channel_idx][0] * frame
@@ -179,6 +215,10 @@ class MosseTracker:
                 i_img_norm = img_color_mode[:,:,i]
 
             i_F = np.fft.fft2(i_img_norm)
+            
+            if i_F.shape[0]!=self.filter[i][0].shape[0] or i_F.shape[1]!=self.filter[i][0].shape[1]:
+                return 0
+            
             i_output = self.apply_filter(i_F, i)
             if output is None:
                 output = i_output
@@ -189,12 +229,22 @@ class MosseTracker:
             all_G.append(i_output)
         return output
 
-    def draw_rectangle(self, ux, uy, w, h, ox, oy, ow, oh, ax, frames, im):
+    def draw_rectangle(self, ux, uy, w, h, ax, frames, im):
         # Create a Rectangle patch
         rect = patches.Rectangle(
             (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
-        rectOrg = patches.Rectangle(
-            (ox, oy), ow, oh, linewidth=1, edgecolor='g', facecolor='none')
+
         # Add the patch to the Axes
         patch = ax.add_artist(rect)
         frames.append([im, patch])
+
+    def draw_cross(self, ux, uy, w, h, ax, frames, im):
+            # Create a Rectangle patch
+            rect = patches.Rectangle(
+                (ux, uy), w, h, linewidth=1, edgecolor='r', facecolor='none')
+            mymarker = plt.scatter(ux+w/2, uy+h/2, s=300, c='red', marker='x', clip_on=False)
+
+            # Add the patch to the Axes
+            patch = ax.add_artist(rect)
+            patch= ax.add_artist(mymarker)
+            frames.append([im, patch])

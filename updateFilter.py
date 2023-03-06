@@ -16,29 +16,38 @@ def updateFilter(Ai, Bi, Fi, Gi, useResnet, eta=0.125):
     return Hi, Ai, Bi
 
 
-def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet, useHOG, width_hog, height_hog,thr=7):
+def updateWindow(x_org, y_org, w_org, h_org, img, n_times_occluded,useResnet, useHOG, useColor,thr=5):
     peak, psr = get_peak_and_psr(np.fft.ifft2(img).real, useResnet,useHOG)
+    print("psr", psr)    
+    isOkPsr = True
     
     if useResnet ==True or useHOG==True:
+        thr= 2.5
         factorX= w_org/img.shape[1]
         factorY= h_org/img.shape[0]
         if psr > thr:
-            dx = peak[1] - (img.shape[1] / 2)*factorX
-            dy = peak[0] - (img.shape[0] / 2)*factorY
-        else:
             dx = (peak[1] - (img.shape[1] / 2))*factorX
             dy = (peak[0] - (img.shape[0] / 2))*factorY
+        else:
+            isOkPsr=False
+            dx,dy=(0,0)
     else:
-
-        # If PSR < 7 then the object may be occluded
-        if psr > thr:
-    
+        #If PSR < 7 then the object may be occluded
+        if useColor == True:
+            thr=3.5
+            
+        if psr > thr:    
             dx = peak[1] - (w_org / 2)
             dy = peak[0] - (h_org / 2)
         else:
-            dx = peak[1] - (w_org / 2)
-            dy = peak[0] - (h_org / 2)
-                    
+            isOkPsr=False
+            dx,dy=(0,0)
             n_times_occluded[0] += 1        
         
-    return int(x_org + dx), int(y_org + dy)
+        #2.2 HOG
+        #3.5 COLOR
+        #3 Resnet
+        #9 RGB 
+        
+        
+    return isOkPsr,int(x_org + dx), int(y_org + dy)
