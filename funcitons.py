@@ -9,18 +9,21 @@ import math
 import pathlib
 
 
+# Från github //fixa bättre ref
 def rand_warp(img):
     h, w = img.shape[:2]
     C = .1
     ang = np.random.uniform(-C, C)
     c, s = np.cos(ang), np.sin(ang)
     W = np.array([[c + np.random.uniform(-C, C), -s + np.random.uniform(-C, C), 0],
-                    [s + np.random.uniform(-C, C), c + np.random.uniform(-C, C), 0]])
+                  [s + np.random.uniform(-C, C), c + np.random.uniform(-C, C), 0]])
     center_warp = np.array([[w / 2], [h / 2]])
     tmp = np.sum(W[:, :2], axis=1).reshape((2, 1))
     W[:, 2:] = center_warp - center_warp * tmp
     warped = cv2.warpAffine(img, W, (w, h), cv2.BORDER_REFLECT)
     return warped
+# ----------------------------------------
+
 
 def sp_noise(image, prob):
     '''
@@ -116,8 +119,6 @@ def get_augmented_images_cropped(number_of_images, img, crop_data):
     for i in range(number_of_images):
         warped = rand_warp(img_cropped)
         augmented_images_cropped.append(warped)
-        
-
 
     return augmented_images_cropped
     # --------------------------------------------
@@ -198,6 +199,6 @@ def preprocessing(img, width, height):
     # col_mask, row_mask = np.meshgrid(window_col, window_row)
     # window = col_mask * row_mask
 
-    img_norm = norm #* window
+    img_norm = norm  # * window
 
     return img_norm
