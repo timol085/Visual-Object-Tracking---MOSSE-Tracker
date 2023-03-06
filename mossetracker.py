@@ -135,7 +135,7 @@ class MosseTracker:
             ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,width_hog,height_hog )
             self.selected_region = (ux, uy, w, h)
             # Display the image
-            im = ax.imshow(next_frame, cmap="brg", animated=True)
+            im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
             self.draw_rectangle(ux, uy, w, h, ox, oy, ow, oh, ax, frames, im)
             self.update_filter(all_F, all_G)
             count += 1
