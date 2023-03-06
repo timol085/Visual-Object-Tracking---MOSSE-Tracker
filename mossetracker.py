@@ -83,25 +83,23 @@ class MosseTracker:
 
     def track(self, chooseNew):
         n_times_occluded = [0]
-        #self.read_first_frame()
         Counter_psr_off =0
         success = True
 
-        if self.selected_region != None:
+        """if self.selected_region != None:
             ox, oy, ow, oh = self.selected_region
         else:
-            success = False
+            success = False"""
         frames = []
         fig, ax = plt.subplots()
         count = 1
-
+        coordinates= []
+        coordinates.append(self.selected_region)
         while success:
             success, next_frame = self.cap.read()
             if not success:
                 break
             x, y, w, h = self.selected_region
-
-
             output,all_F, all_G= self.calculate_output(next_frame, x,y,w,h)
             try: 
                 int(output)
@@ -109,7 +107,6 @@ class MosseTracker:
                 Counter_psr_off=5
             except TypeError:
                 IsOkPSR, ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,self.color )
-            
             if chooseNew==True and (IsOkPSR == False or ux < -w/2):
                 print(ux)
                 #lägga på counter och kolla om den blivit typ 3 isfall vill vi köra om
@@ -126,14 +123,15 @@ class MosseTracker:
                 im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
                 self.draw_rectangle(ux, uy, w, h,  ax, frames, im)
                 self.update_filter(all_F, all_G)
-                count += 1
-        success, next_frame = self.cap.read()
+                count += 1    
+            coordinates.append((self.selected_region))
+        #success, next_frame = self.cap.read()
         print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
         ani = animation.ArtistAnimation(
             fig, frames, interval=10, blit=True, repeat_delay=0)
         plt.show()
+        return coordinates
         
-        ani.save('myanimation.mp4') 
 
     def lostTrack(self, frame):
         if self.useDetection==True:
