@@ -10,6 +10,7 @@ import matplotlib.patches as patches
 import numpy as np
 from matplotlib import animation
 from features_resnet import DeepFeatureExtractor
+import time
 
 
 class MosseTracker:
@@ -28,8 +29,8 @@ class MosseTracker:
         self.color = color
 
     def initialize(self, video_url, useDetection=False):
-        self.video_url = video_url
-        self.read_first_frame()
+        #self.video_url = video_url
+        self.first_frame = video_url[0]
         self.useDetection = useDetection
         # do eiter detection or let user select regions
         if self.useDetection == False:
@@ -38,7 +39,8 @@ class MosseTracker:
             self.initialize_with_detection()
 
     def initialize_with_region(self):
-        x, y, w, h = self.get_selected_region(self.first_frame, False)
+        x, y, w, h = (118,69,114,162)
+        #self.get_selected_region(self.first_frame, False)
         self.selected_region = (x, y, w, h)
         
         augmented_images = self.augmented_images(
@@ -81,24 +83,22 @@ class MosseTracker:
         else:
             return get_detected_region_from_frame(frame)
 
-    def track(self, chooseNew):
+    def track(self, video,chooseNew):
         n_times_occluded = [0]
         Counter_psr_off =0
         success = True
 
-        """if self.selected_region != None:
-            ox, oy, ow, oh = self.selected_region
-        else:
-            success = False"""
         frames = []
         fig, ax = plt.subplots()
         count = 1
         coordinates= []
         coordinates.append(self.selected_region)
         while success:
-            success, next_frame = self.cap.read()
+            success= True if count <892 else False
             if not success:
                 break
+            next_frame = video[count]
+            
             x, y, w, h = self.selected_region
             output,all_F, all_G= self.calculate_output(next_frame, x,y,w,h)
             try: 
@@ -108,31 +108,29 @@ class MosseTracker:
             except TypeError:
                 IsOkPSR, ux, uy = updateWindow(x, y, w, h, output, n_times_occluded, self.ResNet,self.HOG,self.color )
             if chooseNew==True and (IsOkPSR == False or ux < -w/2):
-                print(ux)
+               
                 #lägga på counter och kolla om den blivit typ 3 isfall vill vi köra om
                 Counter_psr_off +=1
                 if Counter_psr_off >4:
                     
                     Counter_psr_off=0
-                    self.lostTrack(next_frame)
-                    im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
-                    self.draw_cross(x, y, w, h,  ax, frames, im)                 
+                    #self.lostTrack(next_frame)
+                    #im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
+                    #self.draw_cross(x, y, w, h,  ax, frames, im)                 
             else:
                 self.selected_region = (ux, uy, w, h)
                 # Display the image
-                im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
-                self.draw_rectangle(ux, uy, w, h,  ax, frames, im)
-                self.update_filter(all_F, all_G)
+                #im = ax.imshow(cv2.cvtColor(next_frame, cv2.COLOR_BGR2RGB), animated=True)
+                #self.draw_rectangle(ux, uy, w, h,  ax, frames, im)
+                #self.update_filter(all_F, all_G)
                 count += 1    
             coordinates.append((self.selected_region))
         #success, next_frame = self.cap.read()
-        print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
-        ani = animation.ArtistAnimation(
-            fig, frames, interval=10, blit=True, repeat_delay=0)
-        plt.show()
+        #print("TIMES OCCLUDED", n_times_occluded, "/", count-1)
+        #ani = animation.ArtistAnimation(fig, frames, interval=10, blit=True, repeat_delay=0)
+        #plt.show()
         return coordinates
         
-
     def lostTrack(self, frame):
         if self.useDetection==True:
             returnvalue = self.get_selected_region(frame, True)

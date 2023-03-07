@@ -61,5 +61,8 @@ class DeepFeatureExtractor(nn.Module):
             x3 = self.layer3(x2)
             x4 = self.layer4(x3)
             x4= x4.numpy()
+            x1=x1.numpy()
+            if x4.size < 8195:
+                x4= x1
             ret= np.transpose(x4, (2, 3, 1, 0))
             return ret[:,:,:,0]
